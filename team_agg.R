@@ -1,6 +1,7 @@
 library(cfbfastR)
 library(dplyr)
 library(glue)
+library(stringr)
 
 seasons <- 2014:2021
 valid_fbs_teams <- cfbfastR::load_cfb_teams() %>%
@@ -58,7 +59,9 @@ for (yr in seasons) {
             EPAgame_rank = rank(-EPAgame),
             EPAplay_rank = rank(-EPAplay),
             success_rank = rank(-success),
-            start_position_rank = rank(-start_position)
+
+            # except start position
+            start_position_rank = rank(start_position)
         )
 
     print(glue("Summarizing defensive data"))
@@ -88,7 +91,9 @@ for (yr in seasons) {
             EPAgame_rank = rank(EPAgame),
             EPAplay_rank = rank(EPAplay),
             success_rank = rank(success),
-            start_position_rank = rank(start_position)
+
+            # except start position
+            start_position_rank = rank(-start_position)
         )
 
     print(glue("Merging offensive and defensive data, calculating full season ranks"))
@@ -100,7 +105,7 @@ for (yr in seasons) {
             EPAplay_margin = EPAplay_off - EPAplay_def,
             EPAgame_margin = EPAgame_off - EPAgame_def,
             success_margin = success_off - success_def,
-            start_position_margin = start_position_off - start_position_def,
+            start_position_margin = (100 - start_position_off) - (100 - start_position_def),
 
             TEPA_margin_rank = rank(-TEPA_margin),
             EPAgame_margin_rank = rank(-EPAgame_margin),
@@ -112,7 +117,13 @@ for (yr in seasons) {
         )
 
     print(glue("Generating year and team CSVs..."))
+    old_columns <- colnames(team_data)
+    old_columns <- old_columns[grepl("_rank", old_columns)]
+    new_columns <- str_replace(old_columns, "_rank","")
+    new_columns <- paste(new_columns,"rank",sep="_")
+
     team_data <- team_data %>%
+        rename_at(all_of(old_columns), ~ new_columns) %>%
         left_join(valid_fbs_teams, by = c('pos_team' = 'school')) %>%
         select(
             team_id,
