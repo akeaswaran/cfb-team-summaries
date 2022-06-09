@@ -133,6 +133,9 @@ for (yr in seasons) {
             everything()
         )
 
+    print(glue("Creating folder /data/ if necessary"))
+    dir.create(file.path('./data', ""), showWarnings = FALSE)
+
     print(glue("Creating folder /data/{yr} if necessary"))
     dir.create(file.path('./data', glue("{yr}")), showWarnings = FALSE)
 
