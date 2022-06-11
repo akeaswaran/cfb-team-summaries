@@ -27,7 +27,7 @@ WORKDIR /code
 
 COPY --from=rbase /src/data ./data
 COPY --from=nodebase /root/src/build ./
-COPY --from=nodebase /root/src/node_modules ./node_modules
+COPY --from=nodebase /root/src/src/node_modules ./node_modules
 
 ENV PORT=3000
 EXPOSE 3000
