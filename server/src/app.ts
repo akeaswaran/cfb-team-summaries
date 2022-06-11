@@ -5,13 +5,14 @@ import process from 'process';
 import csvtojson from 'csvtojson';
 import { Summary } from './interfaces/summary';
 
-async function retrieveSummaryData(year: number, type = 'overall', team?: string): Promise<Summary[]> {
+async function retrieveSummaryData(year: number, team?: string, type = 'overall'): Promise<Summary[]> {
     let fileName: string = `./data/${year}/`
     if (team) {
         fileName += `${team}/`
     }
     fileName += `${type}.csv`
 
+    console.log(`Looking for data at file path: ${fileName}`)
     const content = await csvtojson().fromFile(fileName);
     const result: Summary[] = [];
     for (const item of content) {
@@ -86,6 +87,7 @@ app.get('/year/:year', async (req, res) => {
             results: summ
         });
     } catch (e) {
+        console.error(e);
         return res.status(400).json({
             error: `Data not found for inputs: year - ${year}`
         });
@@ -101,6 +103,7 @@ app.get('/year/:year/team/:team', async (req, res) => {
             results: summ
         });
     } catch (e) {
+        console.error(e);
         return res.status(400).json({
             error: `Data not found for inputs: year - ${year}, team - ${team}`
         });
