@@ -14,14 +14,13 @@ COPY ./team_agg.R .
 
 RUN Rscript ./team_agg.R
 
-FROM node:16 as nodebase
+FROM node:17 as nodebase
 WORKDIR /root/src
 
 COPY ./server ./
 RUN npm set progress=false && npm config set depth 0
 RUN npm install -g typescript
-RUN npm install
-RUN tsc
+RUN cd src && npm install && tsc
 
 FROM nodebase
 WORKDIR /code
