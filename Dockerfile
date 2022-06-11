@@ -12,7 +12,7 @@ RUN Rscript -e 'devtools::install_github(repo = "saiemgilani/cfbfastR")'
 
 COPY ./team_agg.R .
 
-RUN Rscript ./team_agg.R
+RUN Rscript ./team_agg.R skipcache
 
 FROM node:17 as nodebase
 WORKDIR /root/src
