@@ -3,7 +3,8 @@ library(dplyr)
 library(glue)
 library(stringr)
 
-seasons <- 2014:2021
+max_season <- cfbfastR::most_recent_cfb_season()
+seasons <- 2014:max_season
 valid_fbs_teams <- cfbfastR::load_cfb_teams() %>%
     select(
         team_id,
