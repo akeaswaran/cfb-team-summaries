@@ -77,7 +77,8 @@ for (yr in seasons) {
     plays <- plays %>%
         filter(
             pos_team %in% valid_fbs_teams$school,
-            def_pos_team %in% valid_fbs_teams$school
+            def_pos_team %in% valid_fbs_teams$school,
+            (pass == 1) | (rush == 1)
         ) %>%
         mutate(
             game_id = as.character(game_id)
@@ -91,12 +92,12 @@ for (yr in seasons) {
         summarize_df()
 
     team_off_pass_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(pass)) %>%
+        filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
         group_by(pos_team) %>%
         summarize_df()
 
     team_off_rush_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(rush)) %>%
+        filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
         group_by(pos_team) %>%
         summarize_df()
 
@@ -108,12 +109,12 @@ for (yr in seasons) {
         summarize_df()
 
     team_def_pass_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(pass)) %>%
+        filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
         group_by(def_pos_team) %>%
         summarize_df()
 
     team_def_rush_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(rush)) %>%
+        filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
         group_by(def_pos_team) %>%
         summarize_df()
 
