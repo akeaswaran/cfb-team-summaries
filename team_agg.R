@@ -19,7 +19,7 @@ write_team_csvs <- function (data, team, yr) {
     write.csv(data, glue("./data/{yr}/{team}/overall.csv"), row.names = FALSE)
 }
 
-summarize_df <- function(x) {
+summarize_df <- function(x, ascending=FALSE, remove_cols = c()) {
     tmp <- x %>%
         summarize(
                 plays = n(),
@@ -30,12 +30,25 @@ summarize_df <- function(x) {
                 EPAplay = mean(EPA),
                 EPAgame = TEPA / length(unique(game_id)),
 
+                # yards
+                yards = sum(EPA),
+                yardsplay = mean(EPA),
+                yardsgame = TEPA / length(unique(game_id)),
+
+                # drives
+                drives = length(unique(drive_id)),
+                drivesgame = drives / length(unique(game_id)),
+                yardsdrive = yards / drives,
+                playsdrive = plays / drives,
+
                 # SR
                 success = mean(success),
 
                 # Field Position
                 start_position = mean(drive_start_yards_to_goal),
-            ) %>%
+            )
+    if (ascending) {
+        tmp <- tmp %>%
             mutate(
                 # rank ascending cause defense
                 playsgame_rank = rank(playsgame),
@@ -44,32 +57,63 @@ summarize_df <- function(x) {
                 EPAplay_rank = rank(EPAplay),
                 success_rank = rank(success),
 
+                drivesgame = rank(drivesgame),
+                yardsdrive_rank = rank(yardsdrive),
+                playsdrive_rank = rank(playsdrive),
+
                 # except start position
                 start_position_rank = rank(-start_position)
             )
-    return(tmp)
+    } else {
+        tmp <- tmp %>%
+            mutate(
+                # rank ascending cause defense
+                playsgame_rank = rank(-playsgame),
+                TEPA_rank = rank(-TEPA),
+                EPAgame_rank = rank(-EPAgame),
+                EPAplay_rank = rank(-EPAplay),
+                success_rank = rank(-success),
+
+                drivesgame = rank(-drivesgame),
+                yardsdrive_rank = rank(-yardsdrive),
+                playsdrive_rank = rank(-playsdrive),
+
+                # except start position
+                start_position_rank = rank(-start_position)
+            )
+    }
+
+    return(tmp %>% select(!matches(paste(remove_cols,sep="|"))))
 }
 
 mutate_summary_df <- function(x) {
-    return (
-        x %>%
-            mutate(
-                TEPA_margin = TEPA_off - TEPA_def,
-                EPAplay_margin = EPAplay_off - EPAplay_def,
-                EPAgame_margin = EPAgame_off - EPAgame_def,
-                success_margin = success_off - success_def,
-                start_position_margin = (100 - start_position_off) - (100 - start_position_def),
+    # base_check =
+    print(names(x))
+    tmp <- x %>%
+        mutate(
+            TEPA_margin = TEPA_off - TEPA_def,
+            EPAplay_margin = EPAplay_off - EPAplay_def,
+            EPAgame_margin = EPAgame_off - EPAgame_def,
+            success_margin = success_off - success_def,
 
-                TEPA_margin_rank = rank(-TEPA_margin),
-                EPAgame_margin_rank = rank(-EPAgame_margin),
-                EPAplay_margin_rank = rank(-EPAplay_margin),
-                success_margin_rank = rank(-success_margin),
-                start_position_margin_rank = rank(-start_position_margin),
-            )
-    )
+
+            TEPA_margin_rank = rank(-TEPA_margin),
+            EPAgame_margin_rank = rank(-EPAgame_margin),
+            EPAplay_margin_rank = rank(-EPAplay_margin),
+            success_margin_rank = rank(-success_margin),
+
+        )
+    if (("start_position_off" %in% colnames(x))) {
+        tmp <- tmp %>% mutate(
+            start_position_margin = (100 - start_position_off) - (100 - start_position_def),
+            start_position_margin_rank = rank(-start_position_margin)
+        )
+    }
+
+    return (tmp)
 }
 
-for (yr in seasons) {
+# for (yr in seasons) {
     print(glue("Starting processing for {yr} season..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
 
@@ -94,29 +138,37 @@ for (yr in seasons) {
     team_off_pass_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
         group_by(pos_team) %>%
-        summarize_df()
+        summarize_df(remove_cols = c(
+            'start_position', 'start_position_rank'
+        ))
 
     team_off_rush_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
         group_by(pos_team) %>%
-        summarize_df()
+        summarize_df(remove_cols = c(
+            'start_position', 'start_position_rank'
+        ))
 
     print(glue("Summarizing defensive data"))
 
     team_def_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success)) %>%
         group_by(def_pos_team) %>%
-        summarize_df()
+        summarize_df(ascending = TRUE)
 
     team_def_pass_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
         group_by(def_pos_team) %>%
-        summarize_df()
+        summarize_df(ascending = TRUE, remove_cols = c(
+            'start_position', 'start_position_rank'
+        ))
 
     team_def_rush_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
         group_by(def_pos_team) %>%
-        summarize_df()
+        summarize_df(ascending = TRUE, remove_cols = c(
+            'start_position', 'start_position_rank'
+        ))
 
     print(glue("Merging offensive and defensive data, calculating full season ranks"))
 
@@ -169,6 +221,6 @@ for (yr in seasons) {
     team_data %>%
         group_by(abbreviation) %>%
         group_walk(~ write_team_csvs(.x, .y$abbreviation, yr))
-}
+# }
 
 
