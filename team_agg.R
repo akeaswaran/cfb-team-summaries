@@ -12,14 +12,161 @@ valid_fbs_teams <- cfbfastR::load_cfb_teams() %>%
         abbreviation
     )
 
-write_team_csvs <- function (data, team, yr) {
+write_team_csvs <- function (data, team, yr, type) {
     print(glue("Creating folder /data/{yr}/{team} if necessary"))
     dir.create(file.path(glue('./data/{yr}'), team), showWarnings = FALSE)
 
-    write.csv(data, glue("./data/{yr}/{team}/overall.csv"), row.names = FALSE)
+    write.csv(data, glue("./data/{yr}/{team}/{type}.csv"), row.names = FALSE)
 }
 
-summarize_df <- function(x, ascending=FALSE, remove_cols = c()) {
+summarize_passer_df <- function(x) {
+    tmp <- x %>%
+        filter(
+            grepl('incomplete', passer_player_name) == FALSE,
+            grepl('TEAM', passer_player_name) == FALSE
+        ) %>%
+        summarize(
+            plays = n(),
+            games = length(unique(game_id)),
+            playsgame = plays / games,
+
+            # EPA + EPA/play
+            TEPA = sum(EPA),
+            EPAplay = mean(EPA),
+            EPAgame = TEPA / games,
+
+            # yards
+            yards = sum(yds_receiving, na.rm = TRUE),
+            yardsplay = yards / plays,
+            yardsgame = yards / games,
+
+            # SR
+            success = mean(success),
+            comp = sum(completion),
+            att = sum(pass_attempt),
+            comppct = mean(completion),
+
+            passing_td = sum(pass_td),
+            sacked = sum(sack_vec),
+            sack_yds = sum(yds_sacked),
+
+            pass_int = sum(int),
+            detmer = (yards / (400 * games)) * ((passing_td + pass_int) / (1 + abs(passing_td - pass_int))),
+            detmergame = (yardsgame / 400) * (((passing_td / games) + (pass_int / games)) / (1 + abs((passing_td / games) - (pass_int / games))))
+        )
+
+    tmp <- tmp %>%
+        ungroup() %>%
+        mutate(
+            TEPA_rank = rank(-TEPA),
+            EPAgame_rank = rank(-EPAgame),
+            EPAplay_rank = rank(-EPAplay),
+            success_rank = rank(-success),
+            comppct_rank = rank(-comppct),
+
+            yards_rank = rank(-yards),
+            yardsplay_rank = rank(-yardsplay),
+            yardsgame_rank = rank(-yardsgame),
+
+            detmer_rank = rank(-detmer),
+            detmergame_rank = rank(-detmergame)
+        )
+
+    return(tmp)
+}
+
+summarize_receiver_df <- function(x) {
+    tmp <- x %>%
+        filter(
+            grepl('incomplete', passer_player_name) == FALSE,
+            grepl('TEAM', passer_player_name) == FALSE
+        ) %>%
+        summarize(
+            plays = n(),
+            games = length(unique(game_id)),
+            playsgame = plays / games,
+
+            # EPA + EPA/play
+            TEPA = sum(EPA),
+            EPAplay = mean(EPA),
+            EPAgame = TEPA / games,
+
+            # yards
+            yards = sum(yds_receiving, na.rm = TRUE),
+            yardsplay = yards / plays,
+            yardsgame = yards / games,
+
+            # SR
+            success = mean(success),
+            comp = sum(completion),
+            targets = sum(target),
+            catchpct = comp / targets,
+
+            passing_td = sum(pass_td),
+            fumbles = sum(fumble_vec),
+        )
+
+    tmp <- tmp %>%
+        ungroup() %>%
+        mutate(
+            TEPA_rank = rank(-TEPA),
+            EPAgame_rank = rank(-EPAgame),
+            EPAplay_rank = rank(-EPAplay),
+            success_rank = rank(-success),
+            catchpct_rank = rank(-catchpct),
+
+            yards_rank = rank(-yards),
+            yardsplay_rank = rank(-yardsplay),
+            yardsgame_rank = rank(-yardsgame)
+        )
+
+    return(tmp)
+}
+
+summarize_rusher_df <- function(x) {
+    tmp <- x %>%
+        filter(
+            grepl('TEAM', passer_player_name) == FALSE
+        ) %>%
+        summarize(
+            plays = n(),
+            games = length(unique(game_id)),
+            playsgame = plays / games,
+
+            # EPA + EPA/play
+            TEPA = sum(EPA),
+            EPAplay = mean(EPA),
+            EPAgame = TEPA / games,
+
+            # yards
+            yards = sum(yds_rushed, na.rm = TRUE),
+            yardsplay = yards / plays,
+            yardsgame = yards / games,
+
+            # SR
+            success = mean(success),
+
+            rushing_td = sum(rush_td),
+            fumbles = sum(fumble_vec),
+        )
+
+    tmp <- tmp %>%
+        ungroup() %>%
+        mutate(
+            TEPA_rank = rank(-TEPA),
+            EPAgame_rank = rank(-EPAgame),
+            EPAplay_rank = rank(-EPAplay),
+            success_rank = rank(-success),
+
+            yards_rank = rank(-yards),
+            yardsplay_rank = rank(-yardsplay),
+            yardsgame_rank = rank(-yardsgame),
+        )
+
+    return(tmp)
+}
+
+summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
     tmp <- x %>%
         summarize(
                 plays = n(),
@@ -29,15 +176,18 @@ summarize_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 passrate = mean(pass),
                 rushrate = mean(rush),
 
+                # edrushrate = sum(early_downs_rush) / sum(early_down),
+                # edpassrate = sum(early_downs_pass) / sum(early_down),
+
                 # EPA + EPA/play
                 TEPA = sum(EPA),
                 EPAplay = mean(EPA),
                 EPAgame = TEPA / length(unique(game_id)),
 
                 # yards
-                yards = sum(EPA),
-                yardsplay = mean(EPA),
-                yardsgame = TEPA / length(unique(game_id)),
+                yards = sum(yards_gained),
+                yardsplay = mean(yards_gained),
+                yardsgame = yards / length(unique(game_id)),
 
                 # drives
                 drives = length(unique(drive_id)),
@@ -73,6 +223,8 @@ summarize_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 start_position_rank = rank(-start_position),
                 passrate_rank = rank(-passrate),
                 rushrate_rank = rank(-rushrate),
+                # edrushrate_rank = rank(-edrushrate),
+                # edpassrate_rank = rank(-edpassrate)
             )
     } else {
         tmp <- tmp %>%
@@ -96,6 +248,8 @@ summarize_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 start_position_rank = rank(-start_position),
                 passrate_rank = rank(-passrate),
                 rushrate_rank = rank(-rushrate),
+                # edrushrate_rank = rank(-edrushrate),
+                # edpassrate_rank = rank(-edpassrate)
             )
     }
 
@@ -131,7 +285,33 @@ mutate_summary_df <- function(x) {
     return (tmp)
 }
 
-# for (yr in seasons) {
+clean_columns <- function (x) {
+    old_columns <- colnames(x)
+    old_columns <- old_columns[grepl("_rank", old_columns)]
+    new_columns <- str_replace(old_columns, "_rank","")
+    new_columns <- paste(new_columns,"rank",sep="_")
+
+    return(x %>% rename_at(all_of(old_columns), ~ new_columns))
+}
+
+prepare_for_write <- function(x) {
+    tmp <- x %>%
+        clean_columns() %>%
+        mutate(
+            season = yr
+        ) %>%
+        left_join(valid_fbs_teams, by = c('pos_team' = 'school')) %>%
+        select(
+            team_id,
+            pos_team,
+            abbreviation,
+            season,
+            everything()
+        )
+    return(tmp)
+}
+
+for (yr in seasons) {
     print(glue("Starting processing for {yr} season..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
 
@@ -145,9 +325,9 @@ mutate_summary_df <- function(x) {
         ) %>%
         mutate(
             game_id = as.character(game_id),
-            early_down = (down < 3),
-            early_downs_rush = (rush & early_down),
-            early_downs_pass = (pass & early_down),
+            # early_down = (down < 3),
+            # early_downs_rush = (rush & early_down),
+            # early_downs_pass = (pass & early_down),
         )
 
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))
@@ -155,19 +335,34 @@ mutate_summary_df <- function(x) {
     team_off_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success)) %>%
         group_by(pos_team) %>%
-        summarize_df()
+        summarize_team_df()
+
+    team_qb_data <- plays %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(passer_player_name)) %>%
+        group_by(pos_team, passer_player_name) %>%
+        summarize_passer_df()
+
+    team_rb_data <- plays %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(rusher_player_name)) %>%
+        group_by(pos_team, rusher_player_name) %>%
+        summarize_rusher_df()
+
+    team_wr_data <- plays %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(receiver_player_name)) %>%
+        group_by(pos_team, receiver_player_name) %>%
+        summarize_receiver_df()
 
     team_off_pass_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
         group_by(pos_team) %>%
-        summarize_df(remove_cols = c(
+        summarize_team_df(remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
     team_off_rush_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
         group_by(pos_team) %>%
-        summarize_df(remove_cols = c(
+        summarize_team_df(remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
@@ -176,19 +371,19 @@ mutate_summary_df <- function(x) {
     team_def_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success)) %>%
         group_by(def_pos_team) %>%
-        summarize_df(ascending = TRUE)
+        summarize_team_df(ascending = TRUE)
 
     team_def_pass_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
         group_by(def_pos_team) %>%
-        summarize_df(ascending = TRUE, remove_cols = c(
+        summarize_team_df(ascending = TRUE, remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
     team_def_rush_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
         group_by(def_pos_team) %>%
-        summarize_df(ascending = TRUE, remove_cols = c(
+        summarize_team_df(ascending = TRUE, remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
@@ -208,27 +403,19 @@ mutate_summary_df <- function(x) {
     team_data <- left_join(team_overall_data, team_pass_data, by = c("pos_team" = "pos_team"), suffix = c("","_pass"))
     team_data <- left_join(team_data, team_rush_data, by = c("pos_team" = "pos_team"), suffix = c("","_rush"))
 
-    team_data <- team_data %>%
-        mutate(
-            season = yr
-        )
-
     print(glue("Generating year and team CSVs..."))
-    old_columns <- colnames(team_data)
-    old_columns <- old_columns[grepl("_rank", old_columns)]
-    new_columns <- str_replace(old_columns, "_rank","")
-    new_columns <- paste(new_columns,"rank",sep="_")
 
     team_data <- team_data %>%
-        rename_at(all_of(old_columns), ~ new_columns) %>%
-        left_join(valid_fbs_teams, by = c('pos_team' = 'school')) %>%
-        select(
-            team_id,
-            pos_team,
-            abbreviation,
-            season,
-            everything()
-        )
+        prepare_for_write()
+
+    team_qb_data <- team_qb_data %>%
+        prepare_for_write()
+
+    team_rb_data <- team_rb_data %>%
+        prepare_for_write()
+
+    team_wr_data <- team_wr_data %>%
+        prepare_for_write()
 
     print(glue("Creating folder /data/ if necessary"))
     dir.create(file.path('./data', ""), showWarnings = FALSE)
@@ -242,7 +429,20 @@ mutate_summary_df <- function(x) {
     print(glue("Writing team CSVs to folder /data/{yr}"))
     team_data %>%
         group_by(abbreviation) %>%
-        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr))
-# }
+        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'overall'))
+
+    print(glue("Writing player CSVs to folder /data/{yr}"))
+    team_qb_data %>%
+        group_by(abbreviation) %>%
+        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'passing'))
+
+    team_rb_data %>%
+        group_by(abbreviation) %>%
+        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'rushing'))
+
+    team_wr_data %>%
+        group_by(abbreviation) %>%
+        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'receiving'))
+}
 
 

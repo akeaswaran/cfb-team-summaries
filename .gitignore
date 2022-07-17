@@ -181,3 +181,6 @@ dist
 .pnp.*
 
 server/build
+
+data/
+**/.DS_Store
