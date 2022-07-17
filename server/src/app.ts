@@ -21,49 +21,145 @@ async function retrieveSummaryData(year: number, team?: string, type = 'overall'
             teamId: item.team_id,
             team: item.pos_team,
             offensive: {
-                totalPlays: item.plays_off,
-                playsPerGame: item.playsgame_off,
-                totalEPA: item.TEPA_off,
-                epaPerPlay: item.EPAplay_off,
-                epaPerGame: item.EPAgame_off,
-                successRate: item.success_off,
-                startingFP: item.start_position_off,
-                
-                playsPerGameRank: item.playsgame_off_rank,
-                totalEPARank: item.TEPA_off_rank,
-                epaPerPlayRank: item.EPAplay_off_rank,
-                epaPerGameRank: item.EPAgame_off_rank,
-                successRateRank: item.success_off_rank,
-                startingFPRank: item.start_position_off_rank
+                overall: {
+                    totalPlays: item.plays_off,
+                    playsPerGame: item.playsgame_off,
+                    totalEPA: item.TEPA_off,
+                    epaPerPlay: item.EPAplay_off,
+                    epaPerGame: item.EPAgame_off,
+                    successRate: item.success_off,
+                    startingFP: item.start_position_off,
+                    
+                    playsPerGameRank: item.playsgame_off_rank,
+                    totalEPARank: item.TEPA_off_rank,
+                    epaPerPlayRank: item.EPAplay_off_rank,
+                    epaPerGameRank: item.EPAgame_off_rank,
+                    successRateRank: item.success_off_rank,
+                    startingFPRank: item.start_position_off_rank
+                },
+                passing: {
+                    totalPlays: item.plays_off_pass,
+                    playsPerGame: item.playsgame_off_pass,
+                    totalEPA: item.TEPA_off_pass,
+                    epaPerPlay: item.EPAplay_off_pass,
+                    epaPerGame: item.EPAgame_off_pass,
+                    successRate: item.success_off_pass,
+                    startingFP: item.start_position_off_pass,
+                    
+                    playsPerGameRank: item.playsgame_off_pass_rank,
+                    totalEPARank: item.TEPA_off_pass_rank,
+                    epaPerPlayRank: item.EPAplay_off_pass_rank,
+                    epaPerGameRank: item.EPAgame_off_pass_rank,
+                    successRateRank: item.success_off_pass_rank,
+                    startingFPRank: item.start_position_off_pass_rank
+                },
+                rushing: {
+                    totalPlays: item.plays_off_rush,
+                    playsPerGame: item.playsgame_off_rush,
+                    totalEPA: item.TEPA_off_rush,
+                    epaPerPlay: item.EPAplay_off_rush,
+                    epaPerGame: item.EPAgame_off_rush,
+                    successRate: item.success_off_rush,
+                    startingFP: item.start_position_off_rush,
+                    
+                    playsPerGameRank: item.playsgame_off_rush_rank,
+                    totalEPARank: item.TEPA_off_rush_rank,
+                    epaPerPlayRank: item.EPAplay_off_rush_rank,
+                    epaPerGameRank: item.EPAgame_off_rush_rank,
+                    successRateRank: item.success_off_rush_rank,
+                    startingFPRank: item.start_position_off_rush_rank
+                }
             },
             defensive: {
-                totalPlays: item.plays_def,
-                playsPerGame: item.playsgame_def,
-                totalEPA: item.TEPA_def,
-                epaPerPlay: item.EPAplay_def,
-                epaPerGame: item.EPAgame_def,
-                successRate: item.success_def,
-                startingFP: item.start_position_def,
-
-                playsPerGameRank: item.playsgame_def_rank,
-                totalEPARank: item.TEPA_def_rank,
-                epaPerPlayRank: item.EPAplay_def_rank,
-                epaPerGameRank: item.EPAgame_def_rank,
-                successRateRank: item.success_def_rank,
-                startingFPRank: item.start_position_def_rank
+                overall: {
+                    totalPlays: item.plays_def,
+                    playsPerGame: item.playsgame_def,
+                    totalEPA: item.TEPA_def,
+                    epaPerPlay: item.EPAplay_def,
+                    epaPerGame: item.EPAgame_def,
+                    successRate: item.success_def,
+                    startingFP: item.start_position_def,
+                    
+                    playsPerGameRank: item.playsgame_def_rank,
+                    totalEPARank: item.TEPA_def_rank,
+                    epaPerPlayRank: item.EPAplay_def_rank,
+                    epaPerGameRank: item.EPAgame_def_rank,
+                    successRateRank: item.success_def_rank,
+                    startingFPRank: item.start_position_def_rank
+                },
+                passing: {
+                    totalPlays: item.plays_def_pass,
+                    playsPerGame: item.playsgame_def_pass,
+                    totalEPA: item.TEPA_def_pass,
+                    epaPerPlay: item.EPAplay_def_pass,
+                    epaPerGame: item.EPAgame_def_pass,
+                    successRate: item.success_def_pass,
+                    startingFP: item.start_position_def_pass,
+                    
+                    playsPerGameRank: item.playsgame_def_pass_rank,
+                    totalEPARank: item.TEPA_def_pass_rank,
+                    epaPerPlayRank: item.EPAplay_def_pass_rank,
+                    epaPerGameRank: item.EPAgame_def_pass_rank,
+                    successRateRank: item.success_def_pass_rank,
+                    startingFPRank: item.start_position_def_pass_rank
+                },
+                rushing: {
+                    totalPlays: item.plays_def_rush,
+                    playsPerGame: item.playsgame_def_rush,
+                    totalEPA: item.TEPA_def_rush,
+                    epaPerPlay: item.EPAplay_def_rush,
+                    epaPerGame: item.EPAgame_def_rush,
+                    successRate: item.success_def_rush,
+                    startingFP: item.start_position_def_rush,
+                    
+                    playsPerGameRank: item.playsgame_def_rush_rank,
+                    totalEPARank: item.TEPA_def_rush_rank,
+                    epaPerPlayRank: item.EPAplay_def_rush_rank,
+                    epaPerGameRank: item.EPAgame_def_rush_rank,
+                    successRateRank: item.success_def_rush_rank,
+                    startingFPRank: item.start_position_def_rush_rank
+                }
             },
             differential: {
-                totalEPA: item.TEPA_margin,
-                epaPerPlay: item.EPAplay_margin,
-                epaPerGame: item.EPAgame_margin,
-                successRate: item.success_margin,
-                startingFP: item.start_position_margin,
+                overall: {
+                    totalEPA: item.TEPA_margin,
+                    epaPerPlay: item.EPAplay_margin,
+                    epaPerGame: item.EPAgame_margin,
+                    successRate: item.success_margin,
+                    startingFP: item.start_position_margin,
 
-                totalEPARank: item.TEPA_margin_rank,
-                epaPerPlayRank: item.EPAplay_margin_rank,
-                epaPerGameRank: item.EPAgame_margin_rank,
-                successRateRank: item.success_margin_rank,
-                startingFPRank: item.start_position_margin_rank
+                    totalEPARank: item.TEPA_margin_rank,
+                    epaPerPlayRank: item.EPAplay_margin_rank,
+                    epaPerGameRank: item.EPAgame_margin_rank,
+                    successRateRank: item.success_margin_rank,
+                    startingFPRank: item.start_position_margin_rank
+                },
+                passing: {
+                    totalEPA: item.TEPA_margin_pass,
+                    epaPerPlay: item.EPAplay_margin_pass,
+                    epaPerGame: item.EPAgame_margin_pass,
+                    successRate: item.success_margin_pass,
+                    startingFP: item.start_position_margin_pass,
+                    
+                    totalEPARank: item.TEPA_margin_pass_rank,
+                    epaPerPlayRank: item.EPAplay_margin_pass_rank,
+                    epaPerGameRank: item.EPAgame_margin_pass_rank,
+                    successRateRank: item.success_margin_pass_rank,
+                    startingFPRank: item.start_position_margin_pass_rank
+                },
+                rushing: {
+                    totalEPA: item.TEPA_margin_rush,
+                    epaPerPlay: item.EPAplay_margin_rush,
+                    epaPerGame: item.EPAgame_margin_rush,
+                    successRate: item.success_margin_rush,
+                    startingFP: item.start_position_margin_rush,
+                    
+                    totalEPARank: item.TEPA_margin_rush_rank,
+                    epaPerPlayRank: item.EPAplay_margin_rush_rank,
+                    epaPerGameRank: item.EPAgame_margin_rush_rank,
+                    successRateRank: item.success_margin_rush_rank,
+                    startingFPRank: item.start_position_margin_rush_rank
+                }
             }
         });
     }

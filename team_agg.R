@@ -19,6 +19,56 @@ write_team_csvs <- function (data, team, yr) {
     write.csv(data, glue("./data/{yr}/{team}/overall.csv"), row.names = FALSE)
 }
 
+summarize_df <- function(x) {
+    tmp <- x %>%
+        summarize(
+                plays = n(),
+                playsgame = plays / length(unique(game_id)),
+
+                # EPA + EPA/play
+                TEPA = sum(EPA),
+                EPAplay = mean(EPA),
+                EPAgame = TEPA / length(unique(game_id)),
+
+                # SR
+                success = mean(success),
+
+                # Field Position
+                start_position = mean(drive_start_yards_to_goal),
+            ) %>%
+            mutate(
+                # rank ascending cause defense
+                playsgame_rank = rank(playsgame),
+                TEPA_rank = rank(TEPA),
+                EPAgame_rank = rank(EPAgame),
+                EPAplay_rank = rank(EPAplay),
+                success_rank = rank(success),
+
+                # except start position
+                start_position_rank = rank(-start_position)
+            )
+    return(tmp)
+}
+
+mutate_summary_df <- function(x) {
+    return (
+        x %>%
+            mutate(
+                TEPA_margin = TEPA_off - TEPA_def,
+                EPAplay_margin = EPAplay_off - EPAplay_def,
+                EPAgame_margin = EPAgame_off - EPAgame_def,
+                success_margin = success_off - success_def,
+                start_position_margin = (100 - start_position_off) - (100 - start_position_def),
+
+                TEPA_margin_rank = rank(-TEPA_margin),
+                EPAgame_margin_rank = rank(-EPAgame_margin),
+                EPAplay_margin_rank = rank(-EPAplay_margin),
+                success_margin_rank = rank(-success_margin),
+                start_position_margin_rank = rank(-start_position_margin),
+            )
+    )
+}
+
 for (yr in seasons) {
     print(glue("Starting processing for {yr} season..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
@@ -38,82 +88,53 @@ for (yr in seasons) {
     team_off_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success)) %>%
         group_by(pos_team) %>%
-        summarize(
-            plays = n(),
-            playsgame = plays / length(unique(game_id)),
+        summarize_df()
 
-            # EPA + EPA/play
-            TEPA = sum(EPA),
-            EPAplay = mean(EPA),
-            EPAgame = TEPA / length(unique(game_id)),
+    team_off_pass_data <- plays %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(pass)) %>%
+        group_by(pos_team) %>%
+        summarize_df()
 
-            # SR
-            success = mean(success),
-
-            # Field Position
-            start_position = mean(drive_start_yards_to_goal),
-        ) %>%
-        mutate(
-            # rank descending cause offense
-            playsgame_rank = rank(-playsgame),
-            TEPA_rank = rank(-TEPA),
-            EPAgame_rank = rank(-EPAgame),
-            EPAplay_rank = rank(-EPAplay),
-            success_rank = rank(-success),
-
-            # except start position
-            start_position_rank = rank(start_position)
-        )
+    team_off_rush_data <- plays %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(rush)) %>%
+        group_by(pos_team) %>%
+        summarize_df()
 
     print(glue("Summarizing defensive data"))
 
     team_def_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success)) %>%
         group_by(def_pos_team) %>%
-        summarize(
-            plays = n(),
-            playsgame = plays / length(unique(game_id)),
+        summarize_df()
 
-            # EPA + EPA/play
-            TEPA = sum(EPA),
-            EPAplay = mean(EPA),
-            EPAgame = TEPA / length(unique(game_id)),
+    team_def_pass_data <- plays %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(pass)) %>%
+        group_by(def_pos_team) %>%
+        summarize_df()
 
-            # SR
-            success = mean(success),
-
-            # Field Position
-            start_position = mean(drive_start_yards_to_goal),
-        ) %>%
-        mutate(
-            # rank ascending cause defense
-            playsgame_rank = rank(playsgame),
-            TEPA_rank = rank(TEPA),
-            EPAgame_rank = rank(EPAgame),
-            EPAplay_rank = rank(EPAplay),
-            success_rank = rank(success),
-
-            # except start position
-            start_position_rank = rank(-start_position)
-        )
+    team_def_rush_data <- plays %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(rush)) %>%
+        group_by(def_pos_team) %>%
+        summarize_df()
 
     print(glue("Merging offensive and defensive data, calculating full season ranks"))
 
-    team_data <- left_join(team_off_data, team_def_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
+    team_overall_data <- left_join(team_off_data, team_def_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
+    team_pass_data <- left_join(team_off_pass_data, team_def_pass_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
+    team_rush_data <- left_join(team_off_rush_data, team_def_rush_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
+
+    team_overall_data <- team_overall_data %>%
+        mutate_summary_df()
+    team_pass_data <- team_pass_data %>%
+        mutate_summary_df()
+    team_rush_data <- team_rush_data %>%
+        mutate_summary_df()
+
+    team_data <- left_join(team_overall_data, team_pass_data, by = c("pos_team" = "pos_team"), suffix = c("","_pass"))
+    team_data <- left_join(team_data, team_rush_data, by = c("pos_team" = "pos_team"), suffix = c("","_rush"))
+
     team_data <- team_data %>%
         mutate(
-            TEPA_margin = TEPA_off - TEPA_def,
-            EPAplay_margin = EPAplay_off - EPAplay_def,
-            EPAgame_margin = EPAgame_off - EPAgame_def,
-            success_margin = success_off - success_def,
-            start_position_margin = (100 - start_position_off) - (100 - start_position_def),
-
-            TEPA_margin_rank = rank(-TEPA_margin),
-            EPAgame_margin_rank = rank(-EPAgame_margin),
-            EPAplay_margin_rank = rank(-EPAplay_margin),
-            success_margin_rank = rank(-success_margin),
-            start_position_margin_rank = rank(-start_position_margin),
-
             season = yr
         )
 

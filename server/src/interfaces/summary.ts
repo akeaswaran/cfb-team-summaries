@@ -2,15 +2,21 @@ export interface Summary {
     teamId: number
     team: string
     season: number
-    offensive: Segment & PlaysSegment
-    defensive: Segment & PlaysSegment
-    differential: Segment
+    offensive: SituationWrapper<Segment & PlaysSegment>
+    defensive: SituationWrapper<Segment & PlaysSegment>
+    differential: SituationWrapper<Segment>
 }
 
 export interface PlaysSegment {
     totalPlays: number
     playsPerGame: number
     playsPerGameRank: number
+}
+
+export interface SituationWrapper<T> {
+    overall: T
+    passing: T
+    rushing: T
 }
 
 export interface Segment {
