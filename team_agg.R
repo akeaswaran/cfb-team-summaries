@@ -4,7 +4,7 @@ library(glue)
 library(stringr)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
-seasons <- 2021#2014:max_season
+seasons <- 2014:max_season
 valid_fbs_teams <- cfbfastR::load_cfb_teams() %>%
     select(
         team_id,
@@ -422,8 +422,11 @@ for (yr in seasons) {
     print(glue("Creating folder /data/{yr} if necessary"))
     dir.create(file.path('./data', glue("{yr}")), showWarnings = FALSE)
 
-    print(glue("Writing year CSV to folder /data/{yr}"))
+    print(glue("Writing year CSVs to folder /data/{yr}"))
     write.csv(team_data, glue("./data/{yr}/overall.csv"), row.names = FALSE)
+    write.csv(team_qb_data, glue("./data/{yr}/passing.csv"), row.names = FALSE)
+    write.csv(team_rb_data, glue("./data/{yr}/rushing.csv"), row.names = FALSE)
+    write.csv(team_wr_data, glue("./data/{yr}/receiving.csv"), row.names = FALSE)
 
     print(glue("Writing team CSVs to folder /data/{yr}"))
     team_data %>%
