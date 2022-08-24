@@ -4,7 +4,7 @@ library(glue)
 library(stringr)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
-seasons <- 2014:max_season
+seasons <- 2021#2014:max_season
 valid_fbs_teams <- cfbfastR::load_cfb_teams() %>%
     select(
         team_id,
@@ -229,7 +229,7 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
     } else {
         tmp <- tmp %>%
             mutate(
-                # rank ascending cause defense
+                # rank descending cause offense
                 playsgame_rank = rank(-playsgame),
                 TEPA_rank = rank(-TEPA),
                 EPAgame_rank = rank(-EPAgame),
@@ -244,7 +244,6 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 yardsdrive_rank = rank(-yardsdrive),
                 playsdrive_rank = rank(-playsdrive),
 
-                # except start position
                 start_position_rank = rank(-start_position),
                 passrate_rank = rank(-passrate),
                 rushrate_rank = rank(-rushrate),
@@ -335,7 +334,7 @@ for (yr in seasons) {
     team_off_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success)) %>%
         group_by(pos_team) %>%
-        summarize_team_df()
+        summarize_team_df(ascending = FALSE)
 
     team_qb_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(passer_player_name)) %>%
