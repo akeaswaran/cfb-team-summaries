@@ -7,6 +7,7 @@ import { TeamSummary } from './interfaces/overall-summary';
 import { SummaryType } from './enums/summary-types';
 import { Summary, SummaryRequest } from './interfaces/request';
 import { PassingStats, PlayerStatistics, PlayerSummary, ReceivingStats, RushingStats } from './interfaces/player-summary';
+import bodyParser from 'body-parser';
 
 function parseName(item: any, type: SummaryType): string {
     let key = 'name';
@@ -256,7 +257,7 @@ async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
  
 // Initialize the express engine
 const app: express.Application = express();
-
+app.use(bodyParser.urlencoded({ extended: true }));
 app.get('/', (_req, _res) => {
     _res.status(400).json({
         error: 'Invalid endpoint'
@@ -270,8 +271,11 @@ app.post('/', async (req, res) => {
             error: 'Invalid POST body sent'
         })
     }
-    const parsedBody: SummaryRequest = JSON.parse(body);
-    return await retrieveSummaryData(parsedBody);
+    const parsedBody: SummaryRequest = body;
+    const content = await retrieveSummaryData(parsedBody);
+    return res.status(200).json({
+        results: content
+    });
 });
 
 // Server setup
