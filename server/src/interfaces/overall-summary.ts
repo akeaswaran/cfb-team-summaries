@@ -25,10 +25,16 @@ export interface Segment {
     epaPerGame: number
     successRate: number
     startingFP: number
+    yards: number
+    yardsPerPlay: number
+    yardsPerGame: number
 
     totalEPARank: number
     epaPerPlayRank: number
     epaPerGameRank: number
     successRateRank: number
     startingFPRank: number
+    yardsRank: number
+    yardsPerPlayRank: number
+    yardsPerGameRank: number
 }

@@ -81,13 +81,21 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_off,
                         successRate: item.success_off,
                         startingFP: item.start_position_off,
+
+                        yards: item.yards_off,
+                        yardsPerPlay: item.yardsplay_off,
+                        yardsPerGame: item.yardsgame_off,
                         
                         playsPerGameRank: item.playsgame_off_rank,
                         totalEPARank: item.TEPA_off_rank,
                         epaPerPlayRank: item.EPAplay_off_rank,
                         epaPerGameRank: item.EPAgame_off_rank,
                         successRateRank: item.success_off_rank,
-                        startingFPRank: item.start_position_off_rank
+                        startingFPRank: item.start_position_off_rank,
+
+                        yardsRank: item.yards_off_rank,
+                        yardsPerPlayRank: item.yardsplay_off_rank,
+                        yardsPerGameRank: item.yardsgame_off_rank
                     },
                     passing: {
                         totalPlays: item.plays_off_pass,
@@ -103,7 +111,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_off_pass_rank,
                         epaPerGameRank: item.EPAgame_off_pass_rank,
                         successRateRank: item.success_off_pass_rank,
-                        startingFPRank: item.start_position_off_pass_rank
+                        startingFPRank: item.start_position_off_pass_rank,
+
+                        yards: item.yards_off_pass,
+                        yardsPerPlay: item.yardsplay_off_pass,
+                        yardsPerGame: item.yardsgame_off_pass,
+
+                        yardsRank: item.yards_off_pass_rank,
+                        yardsPerPlayRank: item.yardsplay_off_pass_rank,
+                        yardsPerGameRank: item.yardsgame_off_pass_rank
                     },
                     rushing: {
                         totalPlays: item.plays_off_rush,
@@ -119,7 +135,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_off_rush_rank,
                         epaPerGameRank: item.EPAgame_off_rush_rank,
                         successRateRank: item.success_off_rush_rank,
-                        startingFPRank: item.start_position_off_rush_rank
+                        startingFPRank: item.start_position_off_rush_rank,
+
+                        yards: item.yards_off_rush,
+                        yardsPerPlay: item.yardsplay_off_rush,
+                        yardsPerGame: item.yardsgame_off_rush,
+
+                        yardsRank: item.yards_off_rush_rank,
+                        yardsPerPlayRank: item.yardsplay_off_rush_rank,
+                        yardsPerGameRank: item.yardsgame_off_rush_rank
                     }
                 },
                 defensive: {
@@ -137,7 +161,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_def_rank,
                         epaPerGameRank: item.EPAgame_def_rank,
                         successRateRank: item.success_def_rank,
-                        startingFPRank: item.start_position_def_rank
+                        startingFPRank: item.start_position_def_rank,
+
+                        yards: item.yards_def,
+                        yardsPerPlay: item.yardsplay_def,
+                        yardsPerGame: item.yardsgame_def,
+
+                        yardsRank: item.yards_def_rank,
+                        yardsPerPlayRank: item.yardsplay_def_rank,
+                        yardsPerGameRank: item.yardsgame_def_rank
                     },
                     passing: {
                         totalPlays: item.plays_def_pass,
@@ -153,7 +185,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_def_pass_rank,
                         epaPerGameRank: item.EPAgame_def_pass_rank,
                         successRateRank: item.success_def_pass_rank,
-                        startingFPRank: item.start_position_def_pass_rank
+                        startingFPRank: item.start_position_def_pass_rank,
+
+                        yards: item.yards_def_pass,
+                        yardsPerPlay: item.yardsplay_def_pass,
+                        yardsPerGame: item.yardsgame_def_pass,
+
+                        yardsRank: item.yards_def_pass_rank,
+                        yardsPerPlayRank: item.yardsplay_def_pass_rank,
+                        yardsPerGameRank: item.yardsgame_def_pass_rank
                     },
                     rushing: {
                         totalPlays: item.plays_def_rush,
@@ -169,7 +209,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_def_rush_rank,
                         epaPerGameRank: item.EPAgame_def_rush_rank,
                         successRateRank: item.success_def_rush_rank,
-                        startingFPRank: item.start_position_def_rush_rank
+                        startingFPRank: item.start_position_def_rush_rank,
+
+                        yards: item.yards_def_rush,
+                        yardsPerPlay: item.yardsplay_def_rush,
+                        yardsPerGame: item.yardsgame_def_rush,
+
+                        yardsRank: item.yards_def_rush_rank,
+                        yardsPerPlayRank: item.yardsplay_def_rush_rank,
+                        yardsPerGameRank: item.yardsgame_def_rush_rank
                     }
                 },
                 differential: {
@@ -184,7 +232,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_margin_rank,
                         epaPerGameRank: item.EPAgame_margin_rank,
                         successRateRank: item.success_margin_rank,
-                        startingFPRank: item.start_position_margin_rank
+                        startingFPRank: item.start_position_margin_rank,
+
+                        yards: item.yards_margin,
+                        yardsPerPlay: item.yardsplay_margin,
+                        yardsPerGame: item.yardsgame_margin,
+
+                        yardsRank: item.yards_margin_rank,
+                        yardsPerPlayRank: item.yardsplay_margin_rank,
+                        yardsPerGameRank: item.yardsgame_margin_rank
                     },
                     passing: {
                         totalEPA: item.TEPA_margin_pass,
@@ -197,7 +253,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_margin_pass_rank,
                         epaPerGameRank: item.EPAgame_margin_pass_rank,
                         successRateRank: item.success_margin_pass_rank,
-                        startingFPRank: item.start_position_margin_pass_rank
+                        startingFPRank: item.start_position_margin_pass_rank,
+
+                        yards: item.yards_margin_pass,
+                        yardsPerPlay: item.yardsplay_margin_pass,
+                        yardsPerGame: item.yardsgame_margin_pass,
+
+                        yardsRank: item.yards_margin_pass_rank,
+                        yardsPerPlayRank: item.yardsplay_margin_pass_rank,
+                        yardsPerGameRank: item.yardsgame_margin_pass_rank
                     },
                     rushing: {
                         totalEPA: item.TEPA_margin_rush,
@@ -210,7 +274,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerPlayRank: item.EPAplay_margin_rush_rank,
                         epaPerGameRank: item.EPAgame_margin_rush_rank,
                         successRateRank: item.success_margin_rush_rank,
-                        startingFPRank: item.start_position_margin_rush_rank
+                        startingFPRank: item.start_position_margin_rush_rank,
+
+                        yards: item.yards_margin_rush,
+                        yardsPerPlay: item.yardsplay_margin_rush,
+                        yardsPerGame: item.yardsgame_margin_rush,
+
+                        yardsRank: item.yards_margin_rush_rank,
+                        yardsPerPlayRank: item.yardsplay_margin_rush_rank,
+                        yardsPerGameRank: item.yardsgame_margin_rush_rank
                     }
                 }
             };
@@ -289,7 +361,7 @@ app.post('/', async (req, res, next) => {
     const parsedBody: SummaryRequest = body;
     console.debug('Received POST request with params ' + JSON.stringify(parsedBody));
     const content = await retrieveSummaryData(parsedBody);
-    console.debug('Found content ' + JSON.stringify(content));
+    // console.debug('Found content ' + JSON.stringify(content));
     return res.status(200).json({
         results: content
     });
