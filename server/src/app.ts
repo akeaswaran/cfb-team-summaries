@@ -8,6 +8,7 @@ import { SummaryType } from './enums/summary-types';
 import { Summary, SummaryRequest } from './interfaces/request';
 import { PassingStats, PlayerStatistics, PlayerSummary, ReceivingStats, RushingStats } from './interfaces/player-summary';
 import bodyParser from 'body-parser';
+import morgan from 'morgan';
 
 function parseName(item: any, type: SummaryType): string {
     let key = 'name';
@@ -257,6 +258,8 @@ async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
  
 // Initialize the express engine
 const app: express.Application = express();
+app.use(morgan('[summaries] :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'));
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.get('/', (_req, _res) => {
     _res.status(400).json({
@@ -284,7 +287,9 @@ app.post('/', async (req, res, next) => {
     }
 
     const parsedBody: SummaryRequest = body;
+    console.debug('Received POST request with params ' + JSON.stringify(parsedBody));
     const content = await retrieveSummaryData(parsedBody);
+    console.debug('Found content ' + JSON.stringify(content));
     return res.status(200).json({
         results: content
     });
