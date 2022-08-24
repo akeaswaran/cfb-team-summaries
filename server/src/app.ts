@@ -264,6 +264,12 @@ app.get('/', (_req, _res) => {
     })
 });
 
+app.get('/health', (_req, _res) => {
+    _res.status(200).json({
+        status: 'ok'
+    })
+});
+
 app.post('/', async (req, res, next) => {
     const body = req.body;
     if (!body) {
