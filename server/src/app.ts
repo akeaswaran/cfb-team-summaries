@@ -40,7 +40,7 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
         (<PassingStats>stats).completionPct = item.comppct;
         (<PassingStats>stats).touchdowns = item.passing_td;
         (<PassingStats>stats).sacks = item.sacked;
-        (<PassingStats>stats).sackYards = item.sack_yds;
+        (<PassingStats>stats).sackYards = item.sack_yds == "NA" ? "0" : item.sack_yds;
         (<PassingStats>stats).interceptions = item.pass_int;
         (<PassingStats>stats).detmer = item.detmer;
         (<PassingStats>stats).detmerPerGame = item.detmergame;
@@ -264,13 +264,19 @@ app.get('/', (_req, _res) => {
     })
 });
 
-app.post('/', async (req, res) => {
+app.post('/', async (req, res, next) => {
     const body = req.body;
     if (!body) {
         return res.status(400).json({
-            error: 'Invalid POST body sent'
+            error: 'No POST body sent'
         })
     }
+    if (!body.year) {
+        return res.status(400).json({
+            error: 'Did not provide required param `year`'
+        })    
+    }
+
     const parsedBody: SummaryRequest = body;
     const content = await retrieveSummaryData(parsedBody);
     return res.status(200).json({
