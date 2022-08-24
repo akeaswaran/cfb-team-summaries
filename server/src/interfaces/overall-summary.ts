@@ -1,4 +1,4 @@
-export interface Summary {
+export interface TeamSummary {
     teamId: number
     team: string
     season: number
