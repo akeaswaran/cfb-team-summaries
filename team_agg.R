@@ -346,17 +346,29 @@ for (yr in seasons) {
     team_qb_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
         group_by(pos_team, passer_player_name) %>%
-        summarize_passer_df()
+        summarize_passer_df() %>%
+        ungroup() %>%
+        filter(
+            plays > quantile(plays, 0.25) # leaderboard minimums
+        )
 
     team_rb_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0)) %>%
         group_by(pos_team, rusher_player_name) %>%
-        summarize_rusher_df()
+        summarize_rusher_df() %>%
+        ungroup() %>%
+        filter(
+            plays > quantile(plays, 0.25) # leaderboard minimums
+        )
 
     team_wr_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0)) %>%
         group_by(pos_team, receiver_player_name) %>%
-        summarize_receiver_df()
+        summarize_receiver_df() %>%
+        ungroup() %>%
+        filter(
+            plays > quantile(plays, 0.25) # leaderboard minimums
+        )
 
     team_off_pass_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
