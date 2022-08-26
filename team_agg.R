@@ -343,6 +343,19 @@ for (yr in seasons) {
         group_by(pos_team) %>%
         summarize_team_df(ascending = FALSE)
 
+    team_off_drives_data <- plays %>%
+        filter(!is.na(drive_id)) %>%
+        group_by(pos_team, drive_id) %>%
+        summarize(
+            total_available_yards = first(drive_start_yards_to_goal),
+            total_gained_yards = last(drive_yards),
+        ) %>%
+        summarize(
+            total_available_yards = sum(total_available_yards),
+            total_gained_yards = sum(total_gained_yards),
+            available_yards_pct = total_gained_yards / total_available_yards
+        )
+
     team_qb_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
         group_by(pos_team, passer_player_name) %>%
@@ -391,6 +404,19 @@ for (yr in seasons) {
         group_by(def_pos_team) %>%
         summarize_team_df(ascending = TRUE)
 
+    team_def_drives_data <- plays %>%
+        filter(!is.na(drive_id)) %>%
+        group_by(def_pos_team, drive_id) %>%
+        summarize(
+            total_available_yards = first(drive_start_yards_to_goal),
+            total_gained_yards = last(drive_yards),
+        ) %>%
+        summarize(
+            total_available_yards = sum(total_available_yards),
+            total_gained_yards = sum(total_gained_yards),
+            available_yards_pct = total_gained_yards / total_available_yards
+        )
+
     team_def_pass_data <- plays %>%
         filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
         group_by(def_pos_team) %>%
@@ -408,17 +434,29 @@ for (yr in seasons) {
     print(glue("Merging offensive and defensive data, calculating full season ranks"))
 
     team_overall_data <- left_join(team_off_data, team_def_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
+    team_drives_data <- left_join(team_off_drives_data, team_def_drives_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
     team_pass_data <- left_join(team_off_pass_data, team_def_pass_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
     team_rush_data <- left_join(team_off_rush_data, team_def_rush_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
 
     team_overall_data <- team_overall_data %>%
         mutate_summary_df()
+    team_drives_data <- team_drives_data %>%
+        mutate(
+            total_available_yards_margin = total_available_yards_off - total_available_yards_def,
+            total_gained_yards_margin = total_gained_yards_off - total_gained_yards_def,
+            available_yards_pct_margin = available_yards_pct_off - available_yards_pct_def,
+
+            total_available_yards_margin_rank = rank(-total_available_yards_margin),
+            total_gained_yards_margin_rank = rank(-total_gained_yards_margin),
+            available_yards_pct_margin_rank = rank(-available_yards_pct_margin)
+        )
     team_pass_data <- team_pass_data %>%
         mutate_summary_df()
     team_rush_data <- team_rush_data %>%
         mutate_summary_df()
 
-    team_data <- left_join(team_overall_data, team_pass_data, by = c("pos_team" = "pos_team"), suffix = c("","_pass"))
+    team_data <- left_join(team_overall_data, team_drives_data, by = c("pos_team" = "pos_team"), suffix = c("","_drive"))
+    team_data <- left_join(team_data, team_pass_data, by = c("pos_team" = "pos_team"), suffix = c("","_pass"))
     team_data <- left_join(team_data, team_rush_data, by = c("pos_team" = "pos_team"), suffix = c("","_rush"))
 
     print(glue("Generating year and team CSVs..."))

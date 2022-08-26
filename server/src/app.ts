@@ -95,7 +95,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_off_rank,
                         yardsPerPlayRank: item.yardsplay_off_rank,
-                        yardsPerGameRank: item.yardsgame_off_rank
+                        yardsPerGameRank: item.yardsgame_off_rank,
+
+                        totalAvailableYards: item.total_available_yards_off,
+                        totalGainedYards: item.total_gained_yards_off,
+                        availableYardsPct: item.available_yards_pct_off,
+
+                        totalAvailableYardsRank: item.total_available_yards_off_rank,
+                        totalGainedYardsRank: item.total_gained_yards_off_rank,
+                        availableYardsPctRank: item.available_yards_pct_off_rank
                     },
                     passing: {
                         totalPlays: item.plays_off_pass,
@@ -169,7 +177,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_def_rank,
                         yardsPerPlayRank: item.yardsplay_def_rank,
-                        yardsPerGameRank: item.yardsgame_def_rank
+                        yardsPerGameRank: item.yardsgame_def_rank,
+
+                        totalAvailableYards: item.total_available_yards_def,
+                        totalGainedYards: item.total_gained_yards_def,
+                        availableYardsPct: item.available_yards_pct_def,
+
+                        totalAvailableYardsRank: item.total_available_yards_def_rank,
+                        totalGainedYardsRank: item.total_gained_yards_def_rank,
+                        availableYardsPctRank: item.available_yards_pct_def_rank
                     },
                     passing: {
                         totalPlays: item.plays_def_pass,
@@ -240,7 +256,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_margin_rank,
                         yardsPerPlayRank: item.yardsplay_margin_rank,
-                        yardsPerGameRank: item.yardsgame_margin_rank
+                        yardsPerGameRank: item.yardsgame_margin_rank,
+
+                        totalAvailableYards: item.total_available_yards_margin,
+                        totalGainedYards: item.total_gained_yards_margin,
+                        availableYardsPct: item.available_yards_pct_margin,
+
+                        totalAvailableYardsRank: item.total_available_yards_margin_rank,
+                        totalGainedYardsRank: item.total_gained_yards_margin_rank,
+                        availableYardsPctRank: item.available_yards_pct_margin_rank
                     },
                     passing: {
                         totalEPA: item.TEPA_margin_pass,

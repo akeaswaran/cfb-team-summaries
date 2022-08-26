@@ -13,8 +13,18 @@ export interface PlaysSegment {
     playsPerGameRank: number
 }
 
+export interface DrivesSegment {
+    totalAvailableYards: number
+    totalGainedYards: number
+    availableYardsPct: number
+
+    totalAvailableYardsRank: number
+    totalGainedYardsRank: number
+    availableYardsPctRank: number
+}
+
 export interface SituationWrapper<T> {
-    overall: T
+    overall: T & DrivesSegment
     passing: T
     rushing: T
 }
