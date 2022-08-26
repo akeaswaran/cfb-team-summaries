@@ -385,11 +385,18 @@ app.post('/', async (req, res, next) => {
 
     const parsedBody: SummaryRequest = body;
     console.debug('Received POST request with params ' + JSON.stringify(parsedBody));
-    const content = await retrieveSummaryData(parsedBody);
-    // console.debug('Found content ' + JSON.stringify(content));
-    return res.status(200).json({
-        results: content
-    });
+    try {
+        const content = await retrieveSummaryData(parsedBody);
+        // console.debug('Found content ' + JSON.stringify(content));
+        return res.status(200).json({
+            results: content
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(404).json({
+            error: 'no data found'
+        });
+    }
 });
 
 // Server setup
