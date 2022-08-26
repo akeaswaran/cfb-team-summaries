@@ -3,6 +3,7 @@ export interface PlayerSummary {
     team: string
     season: number
     name: string
+    playerId: string
 
     advanced: AdvancedPlayerStats
     statistics: PlayerStatistics

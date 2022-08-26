@@ -295,6 +295,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                 teamId: item.team_id,
                 team: item.pos_team,
                 name: parseName(item, type),
+                playerId: item.player_id,
                 advanced: {
                     totalEPA: item.TEPA,
                     epaPerPlay: item.EPAplay,

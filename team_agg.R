@@ -25,7 +25,12 @@ summarize_passer_df <- function(x) {
             grepl('incomplete', passer_player_name) == FALSE,
             grepl('TEAM', passer_player_name) == FALSE
         ) %>%
+        mutate(passer_player_id = case_when(
+            !is.na(incompletion_player_id) ~ completion_player_id,
+            TRUE ~ completion_player_id
+        )) %>%
         summarize(
+            player_id = dplyr::first(na.omit(passer_player_id)),
             plays = n(),
             games = length(unique(game_id)),
             playsgame = plays / games,
@@ -78,10 +83,11 @@ summarize_passer_df <- function(x) {
 summarize_receiver_df <- function(x) {
     tmp <- x %>%
         filter(
-            grepl('incomplete', passer_player_name) == FALSE,
-            grepl('TEAM', passer_player_name) == FALSE
+            grepl('incomplete', receiver_player_name) == FALSE,
+            grepl('TEAM', receiver_player_name) == FALSE
         ) %>%
         summarize(
+            player_id = dplyr::first(na.omit(target_player_id)),
             plays = n(),
             games = length(unique(game_id)),
             playsgame = plays / games,
@@ -126,9 +132,10 @@ summarize_receiver_df <- function(x) {
 summarize_rusher_df <- function(x) {
     tmp <- x %>%
         filter(
-            grepl('TEAM', passer_player_name) == FALSE
+            grepl('TEAM', rusher_player_name) == FALSE
         ) %>%
         summarize(
+            player_id = dplyr::first(na.omit(rush_player_id)),
             plays = n(),
             games = length(unique(game_id)),
             playsgame = plays / games,
@@ -337,17 +344,17 @@ for (yr in seasons) {
         summarize_team_df(ascending = FALSE)
 
     team_qb_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(passer_player_name)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
         group_by(pos_team, passer_player_name) %>%
         summarize_passer_df()
 
     team_rb_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(rusher_player_name)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0)) %>%
         group_by(pos_team, rusher_player_name) %>%
         summarize_rusher_df()
 
     team_wr_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(receiver_player_name)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0)) %>%
         group_by(pos_team, receiver_player_name) %>%
         summarize_receiver_df()
 
