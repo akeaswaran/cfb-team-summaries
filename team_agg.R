@@ -353,8 +353,8 @@ for (yr in seasons) {
             play_stuffed = (yards_gained <= 2),
             red_zone = (yards_to_goal <= 20),
             red_zone_success = case_when(
-                (as.numeric(red_zone) == 1) ~ success,
-                TRUE ~ NA_real_
+                (as.integer(red_zone) == 1) ~ success,
+                TRUE ~ NA_integer_
             ),
             third_down_success = case_when(
                 (down == 3) ~ success,
