@@ -357,8 +357,8 @@ for (yr in seasons) {
                 TRUE ~ NA_integer_
             ),
             third_down_success = case_when(
-                (down == 3) ~ success,
-                TRUE ~ NA_real_
+                (as.integer(down) == 3) ~ success,
+                TRUE ~ NA_integer_
             ),
             havoc = (sack_vec | int | fumble_vec | !is.na(pass_breakup_player_name) | (yards_gained < 0)),
             explosive = case_when(
