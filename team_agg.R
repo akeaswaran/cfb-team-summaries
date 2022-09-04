@@ -352,13 +352,15 @@ for (yr in seasons) {
             game_id = as.character(game_id),
             play_stuffed = (yards_gained <= 2),
             red_zone = (yards_to_goal <= 20),
+            success = as.double(success),
+
             red_zone_success = case_when(
-                (as.integer(red_zone) == 1) ~ success,
-                TRUE ~ NA_integer_
+                (as.numeric(red_zone) == 1) ~ success,
+                TRUE ~ NA_real_
             ),
             third_down_success = case_when(
-                (as.integer(down) == 3) ~ success,
-                TRUE ~ NA_integer_
+                (as.numeric(down) == 3) ~ success,
+                TRUE ~ NA_real_
             ),
             havoc = (sack_vec | int | fumble_vec | !is.na(pass_breakup_player_name) | (yards_gained < 0)),
             explosive = case_when(
