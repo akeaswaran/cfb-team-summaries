@@ -183,6 +183,9 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 passrate = mean(pass),
                 rushrate = mean(rush),
 
+                havoc = mean(havoc),
+                explosive = mean(explosive),
+
                 # edrushrate = sum(early_downs_rush) / sum(early_down),
                 # edpassrate = sum(early_downs_pass) / sum(early_down),
 
@@ -235,6 +238,8 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
 
                 # except start position
                 start_position_rank = rank(-start_position),
+                havoc_rank = rank(-havoc),
+                explosive_rank = rank(explosive),
                 passrate_rank = rank(-passrate),
                 rushrate_rank = rank(-rushrate),
                 # edrushrate_rank = rank(-edrushrate),
@@ -263,6 +268,8 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 third_down_success_rank = rank(-third_down_success),
 
                 start_position_rank = rank(-start_position),
+                havoc_rank = rank(havoc),
+                explosive_rank = rank(-explosive),
                 passrate_rank = rank(-passrate),
                 rushrate_rank = rank(-rushrate),
                 # edrushrate_rank = rank(-edrushrate),
@@ -333,6 +340,7 @@ for (yr in seasons) {
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
 
     print(glue("Found {nrow(plays)} total plays, filtering to FBS/FBS non-garbage-time"))
+
     plays <- plays %>%
         filter(
             pos_team %in% valid_fbs_teams$school,
@@ -351,6 +359,12 @@ for (yr in seasons) {
             third_down_success = case_when(
                 (down == 3) ~ success,
                 TRUE ~ NA_real_
+            ),
+            havoc = (sack_vec | int | fumble_vec | !is.na(pass_breakup_player_name) | (yards_gained < 0)),
+            explosive = case_when(
+                (pass == 1) ~ (EPA >= 2.4),
+                (rush == 1) ~ (EPA >= 1.8),
+                TRUE ~ FALSE
             )
             # early_down = (down < 3),
             # early_downs_rush = (rush & early_down),

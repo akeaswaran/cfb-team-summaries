@@ -111,6 +111,11 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         redZoneSuccessRateRank: item.red_zone_success_off_rank,
                         thirdDownSuccessRate: item.third_down_success_off,
                         thirdDownSuccessRateRank: item.third_down_success_off_rank,
+
+                        explosiveRate: item.explosive_off,
+                        explosiveRateRank: item.explosive_off_rank,
+                        havocRate: item.havoc_off,
+                        havocRateRank: item.havoc_off_rank,
                     },
                     passing: {
                         totalPlays: item.plays_off_pass,
@@ -142,6 +147,11 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         redZoneSuccessRateRank: item.red_zone_success_off_pass_rank,
                         thirdDownSuccessRate: item.third_down_success_off_pass,
                         thirdDownSuccessRateRank: item.third_down_success_off_pass_rank,
+
+                        explosiveRate: item.explosive_off_pass,
+                        explosiveRateRank: item.explosive_off_pass_rank,
+                        havocRate: item.havoc_off_pass,
+                        havocRateRank: item.havoc_off_pass_rank,
                     },
                     rushing: {
                         totalPlays: item.plays_off_rush,
@@ -173,6 +183,11 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         redZoneSuccessRateRank: item.red_zone_success_off_rush_rank,
                         thirdDownSuccessRate: item.third_down_success_off_rush,
                         thirdDownSuccessRateRank: item.third_down_success_off_rush_rank,
+
+                        explosiveRate: item.explosive_off_rush,
+                        explosiveRateRank: item.explosive_off_rush_rank,
+                        havocRate: item.havoc_off_rush,
+                        havocRateRank: item.havoc_off_rush_rank,
                     }
                 },
                 defensive: {
@@ -214,6 +229,11 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         redZoneSuccessRateRank: item.red_zone_success_def_rank,
                         thirdDownSuccessRate: item.third_down_success_def,
                         thirdDownSuccessRateRank: item.third_down_success_def_rank,
+
+                        explosiveRate: item.explosive_def,
+                        explosiveRateRank: item.explosive_def_rank,
+                        havocRate: item.havoc_def,
+                        havocRateRank: item.havoc_def_rank,
                     },
                     passing: {
                         totalPlays: item.plays_def_pass,
@@ -245,6 +265,11 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         redZoneSuccessRateRank: item.red_zone_success_def_pass_rank,
                         thirdDownSuccessRate: item.third_down_success_def_pass,
                         thirdDownSuccessRateRank: item.third_down_success_def_pass_rank,
+
+                        explosiveRate: item.explosive_def_pass,
+                        explosiveRateRank: item.explosive_def_pass_rank,
+                        havocRate: item.havoc_def_pass,
+                        havocRateRank: item.havoc_def_pass_rank,
                     },
                     rushing: {
                         totalPlays: item.plays_def_rush,
@@ -276,6 +301,11 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         redZoneSuccessRateRank: item.red_zone_success_def_rush_rank,
                         thirdDownSuccessRate: item.third_down_success_def_rush,
                         thirdDownSuccessRateRank: item.third_down_success_def_rush_rank,
+
+                        explosiveRate: item.explosive_def_rush,
+                        explosiveRateRank: item.explosive_def_rush_rank,
+                        havocRate: item.havoc_def_rush,
+                        havocRateRank: item.havoc_def_rush_rank,
                     }
                 },
                 differential: {

@@ -56,4 +56,10 @@ export interface SituationalSuccess {
     stuffedPlayRateRank: number
     redZoneSuccessRateRank: number
     thirdDownSuccessRateRank: number
+
+    havocRate: number
+    havocRateRank: number
+
+    explosiveRate: number
+    explosiveRateRank: number
 }
