@@ -350,7 +350,7 @@ for (yr in seasons) {
         ) %>%
         mutate(
             game_id = as.character(game_id),
-            play_stuffed = (yards_gained <= 2),
+            play_stuffed = (yards_gained <= 0),
             red_zone = (yards_to_goal <= 20),
             success = as.double(success),
 
