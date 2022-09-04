@@ -103,7 +103,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         totalAvailableYardsRank: item.total_available_yards_off_rank,
                         totalGainedYardsRank: item.total_gained_yards_off_rank,
-                        availableYardsPctRank: item.available_yards_pct_off_rank
+                        availableYardsPctRank: item.available_yards_pct_off_rank,
+
+                        stuffedPlayRate: item.play_stuffed_off,
+                        stuffedPlayRateRank: item.play_stuffed_off_rank,
+                        redZoneSuccessRate: item.red_zone_success_off,
+                        redZoneSuccessRateRank: item.red_zone_success_off_rank,
+                        thirdDownSuccessRate: item.third_down_success_off,
+                        thirdDownSuccessRateRank: item.third_down_success_off_rank,
                     },
                     passing: {
                         totalPlays: item.plays_off_pass,
@@ -127,7 +134,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_off_pass_rank,
                         yardsPerPlayRank: item.yardsplay_off_pass_rank,
-                        yardsPerGameRank: item.yardsgame_off_pass_rank
+                        yardsPerGameRank: item.yardsgame_off_pass_rank,
+
+                        stuffedPlayRate: item.play_stuffed_off_pass,
+                        stuffedPlayRateRank: item.play_stuffed_off_pass_rank,
+                        redZoneSuccessRate: item.red_zone_success_off_pass,
+                        redZoneSuccessRateRank: item.red_zone_success_off_pass_rank,
+                        thirdDownSuccessRate: item.third_down_success_off_pass,
+                        thirdDownSuccessRateRank: item.third_down_success_off_pass_rank,
                     },
                     rushing: {
                         totalPlays: item.plays_off_rush,
@@ -151,7 +165,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_off_rush_rank,
                         yardsPerPlayRank: item.yardsplay_off_rush_rank,
-                        yardsPerGameRank: item.yardsgame_off_rush_rank
+                        yardsPerGameRank: item.yardsgame_off_rush_rank,
+
+                        stuffedPlayRate: item.play_stuffed_off_rush,
+                        stuffedPlayRateRank: item.play_stuffed_off_rush_rank,
+                        redZoneSuccessRate: item.red_zone_success_off_rush,
+                        redZoneSuccessRateRank: item.red_zone_success_off_rush_rank,
+                        thirdDownSuccessRate: item.third_down_success_off_rush,
+                        thirdDownSuccessRateRank: item.third_down_success_off_rush_rank,
                     }
                 },
                 defensive: {
@@ -185,7 +206,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         totalAvailableYardsRank: item.total_available_yards_def_rank,
                         totalGainedYardsRank: item.total_gained_yards_def_rank,
-                        availableYardsPctRank: item.available_yards_pct_def_rank
+                        availableYardsPctRank: item.available_yards_pct_def_rank,
+
+                        stuffedPlayRate: item.play_stuffed_def,
+                        stuffedPlayRateRank: item.play_stuffed_def_rank,
+                        redZoneSuccessRate: item.red_zone_success_def,
+                        redZoneSuccessRateRank: item.red_zone_success_def_rank,
+                        thirdDownSuccessRate: item.third_down_success_def,
+                        thirdDownSuccessRateRank: item.third_down_success_def_rank,
                     },
                     passing: {
                         totalPlays: item.plays_def_pass,
@@ -209,7 +237,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_def_pass_rank,
                         yardsPerPlayRank: item.yardsplay_def_pass_rank,
-                        yardsPerGameRank: item.yardsgame_def_pass_rank
+                        yardsPerGameRank: item.yardsgame_def_pass_rank,
+
+                        stuffedPlayRate: item.play_stuffed_def_pass,
+                        stuffedPlayRateRank: item.play_stuffed_def_pass_rank,
+                        redZoneSuccessRate: item.red_zone_success_def_pass,
+                        redZoneSuccessRateRank: item.red_zone_success_def_pass_rank,
+                        thirdDownSuccessRate: item.third_down_success_def_pass,
+                        thirdDownSuccessRateRank: item.third_down_success_def_pass_rank,
                     },
                     rushing: {
                         totalPlays: item.plays_def_rush,
@@ -233,7 +268,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_def_rush_rank,
                         yardsPerPlayRank: item.yardsplay_def_rush_rank,
-                        yardsPerGameRank: item.yardsgame_def_rush_rank
+                        yardsPerGameRank: item.yardsgame_def_rush_rank,
+
+                        stuffedPlayRate: item.play_stuffed_def_rush,
+                        stuffedPlayRateRank: item.play_stuffed_def_rush_rank,
+                        redZoneSuccessRate: item.red_zone_success_def_rush,
+                        redZoneSuccessRateRank: item.red_zone_success_def_rush_rank,
+                        thirdDownSuccessRate: item.third_down_success_def_rush,
+                        thirdDownSuccessRateRank: item.third_down_success_def_rush_rank,
                     }
                 },
                 differential: {

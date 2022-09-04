@@ -195,6 +195,7 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 yards = sum(yards_gained),
                 yardsplay = mean(yards_gained),
                 yardsgame = yards / length(unique(game_id)),
+                play_stuffed = mean(play_stuffed),
 
                 # drives
                 drives = length(unique(drive_id)),
@@ -204,6 +205,8 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
 
                 # SR
                 success = mean(success),
+                red_zone_success = mean(red_zone_success, na.omit = TRUE),
+                third_down_success = mean(third_down_success, na.omit = TRUE),
 
                 # Field Position
                 start_position = mean(drive_start_yards_to_goal),
@@ -225,6 +228,10 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 drivesgame_rank = rank(drivesgame),
                 yardsdrive_rank = rank(yardsdrive),
                 playsdrive_rank = rank(playsdrive),
+
+                play_stuffed_rank = rank(play_stuffed),
+                red_zone_success_rank = rank(red_zone_success),
+                third_down_success_rank = rank(third_down_success),
 
                 # except start position
                 start_position_rank = rank(-start_position),
@@ -250,6 +257,10 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 drivesgame = rank(-drivesgame),
                 yardsdrive_rank = rank(-yardsdrive),
                 playsdrive_rank = rank(-playsdrive),
+
+                play_stuffed_rank = rank(-play_stuffed),
+                red_zone_success_rank = rank(-red_zone_success),
+                third_down_success_rank = rank(-third_down_success),
 
                 start_position_rank = rank(-start_position),
                 passrate_rank = rank(-passrate),
@@ -331,6 +342,16 @@ for (yr in seasons) {
         ) %>%
         mutate(
             game_id = as.character(game_id),
+            play_stuffed = (yards_gained <= 2),
+            red_zone = (yards_to_goal <= 20),
+            red_zone_success = case_when(
+                red_zone ~ success,
+                TRUE ~ NA_real_
+            ),
+            third_down_success = case_when(
+                (down == 3) ~ success,
+                TRUE ~ NA_real_
+            )
             # early_down = (down < 3),
             # early_downs_rush = (rush & early_down),
             # early_downs_pass = (pass & early_down),

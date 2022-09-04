@@ -2,8 +2,8 @@ export interface TeamSummary {
     teamId: number
     team: string
     season: number
-    offensive: SituationWrapper<Segment & PlaysSegment>
-    defensive: SituationWrapper<Segment & PlaysSegment>
+    offensive: SituationWrapper<Segment & PlaysSegment & SituationalSuccess>
+    defensive: SituationWrapper<Segment & PlaysSegment & SituationalSuccess>
     differential: SituationWrapper<Segment>
 }
 
@@ -47,4 +47,13 @@ export interface Segment {
     yardsRank: number
     yardsPerPlayRank: number
     yardsPerGameRank: number
+}
+
+export interface SituationalSuccess {
+    stuffedPlayRate: number
+    redZoneSuccessRate: number
+    thirdDownSuccessRate: number
+    stuffedPlayRateRank: number
+    redZoneSuccessRateRank: number
+    thirdDownSuccessRateRank: number
 }
