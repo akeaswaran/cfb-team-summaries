@@ -39,10 +39,14 @@ interface AdvancedPlayerStats {
 export interface PassingStats {
     completions: number
     attempts: number
+    dropbacks: number
     completionPct: number
     touchdowns: number
     sacks: number
     sackYards: number
+    sackAdjustedYards: number
+    yardsPerDropback: number
+
     interceptions: number
     detmer: number
     detmerPerGame: number
@@ -50,6 +54,9 @@ export interface PassingStats {
     completionPctRank: number
     detmerRank: number
     detmerPerGameRank: number
+
+    sackAdjustedYardsRank: number
+    yardsPerDropbackRank: number
 }
 
 export interface RushingStats {

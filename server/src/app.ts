@@ -46,9 +46,16 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
         (<PassingStats>stats).detmer = item.detmer;
         (<PassingStats>stats).detmerPerGame = item.detmergame;
     
-        (<PassingStats>stats).completionPctRank = item.comppc_rank;
+        (<PassingStats>stats).completionPctRank = item.comppct_rank;
         (<PassingStats>stats).detmerRank = item.detmer_rank;
         (<PassingStats>stats).detmerPerGameRank = item.detmergame_rank;
+
+        (<PassingStats>stats).dropbacks = item.dropbacks;
+        (<PassingStats>stats).sackAdjustedYards = item.sack_adj_yards;
+        (<PassingStats>stats).yardsPerDropback = item.yardsdropback;
+        (<PassingStats>stats).sackAdjustedYardsRank = item.sack_adj_yards_rank;
+        (<PassingStats>stats).yardsPerDropbackRank = item.yardsdropback_rank;
+
     } else if (type === SummaryType.Rushing) {
         (<RushingStats>stats).touchdowns = item.rushing_td;
         (<RushingStats>stats).fumbles = item.fumbles;
@@ -61,6 +68,9 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
     
         (<ReceivingStats>stats).catchPctRank = item.catchpct_rank
     }
+    Object.keys(stats).forEach(key => {
+        stats[key] = parseFloat(stats[key])
+    })
     return <PlayerStatistics>stats;
 }
 
