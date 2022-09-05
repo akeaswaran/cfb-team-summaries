@@ -208,8 +208,8 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
 
                 # SR
                 success = mean(success),
-                red_zone_success = mean(red_zone_success, na.omit = TRUE),
-                third_down_success = mean(third_down_success, na.omit = TRUE),
+                red_zone_success = mean(red_zone_success, na.rm = TRUE),
+                third_down_success = mean(third_down_success, na.rm = TRUE),
 
                 # Field Position
                 start_position = mean(drive_start_yards_to_goal),
