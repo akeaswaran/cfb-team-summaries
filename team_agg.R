@@ -52,12 +52,15 @@ summarize_passer_df <- function(x) {
             comppct = mean(completion),
 
             passing_td = sum(pass_td),
-            sacked = sum(sack_vec),
-            sack_yds = sum(yds_sacked),
+            sacked = sum(sack_vec, na.rm = TRUE),
+            sack_yds = sum(yds_sacked, na.rm = TRUE),
 
             pass_int = sum(int),
             detmer = (yards / (400 * games)) * ((passing_td + pass_int) / (1 + abs(passing_td - pass_int))),
-            detmergame = (yardsgame / 400) * (((passing_td / games) + (pass_int / games)) / (1 + abs((passing_td / games) - (pass_int / games))))
+            detmergame = (yardsgame / 400) * (((passing_td / games) + (pass_int / games)) / (1 + abs((passing_td / games) - (pass_int / games)))),
+            dropbacks = att + sacked,
+            sack_adj_yards = yards - abs(sack_yds),
+            yardsdropback = sack_adj_yards / dropbacks
         )
 
     tmp <- tmp %>%
@@ -72,6 +75,8 @@ summarize_passer_df <- function(x) {
             yards_rank = rank(-yards),
             yardsplay_rank = rank(-yardsplay),
             yardsgame_rank = rank(-yardsgame),
+            sack_adj_yards_rank = rank(-sack_adj_yards),
+            yardsdropback_rank = rank(-yardsdropback),
 
             detmer_rank = rank(-detmer),
             detmergame_rank = rank(-detmergame)
