@@ -108,7 +108,7 @@ summarize_receiver_df <- function(x) {
             yardsgame = yards / games,
 
             # SR
-            success = mean(success),
+            success = mean(epa_success),
             comp = sum(completion),
             targets = sum(target),
             catchpct = comp / targets,
@@ -156,7 +156,7 @@ summarize_rusher_df <- function(x) {
             yardsgame = yards / games,
 
             # SR
-            success = mean(success),
+            success = mean(epa_success),
 
             rushing_td = sum(rush_td),
             fumbles = sum(fumble_vec),
@@ -212,7 +212,7 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 playsdrive = plays / drives,
 
                 # SR
-                success = mean(success),
+                success = mean(epa_success),
                 red_zone_success = mean(red_zone_success, na.rm = TRUE),
                 third_down_success = mean(third_down_success, na.rm = TRUE),
 
@@ -357,14 +357,14 @@ for (yr in seasons) {
             game_id = as.character(game_id),
             play_stuffed = (yards_gained <= 0),
             red_zone = (yards_to_goal <= 20),
-            success = as.double(success),
+            epa_success = as.double(epa_success),
 
             red_zone_success = case_when(
-                (as.numeric(red_zone) == 1) ~ success,
+                (as.numeric(red_zone) == 1) ~ epa_success,
                 TRUE ~ NA_real_
             ),
             third_down_success = case_when(
-                (as.numeric(down) == 3) ~ success,
+                (as.numeric(down) == 3) ~ epa_success,
                 TRUE ~ NA_real_
             ),
             havoc = (sack_vec | int | fumble_vec | !is.na(pass_breakup_player_name) | (yards_gained < 0)),
@@ -381,7 +381,7 @@ for (yr in seasons) {
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))
 
     team_off_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success)) %>%
         group_by(pos_team) %>%
         summarize_team_df(ascending = FALSE)
 
@@ -399,7 +399,7 @@ for (yr in seasons) {
         )
 
     team_qb_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
         group_by(pos_team, passer_player_name) %>%
         summarize_passer_df() %>%
         ungroup() %>%
@@ -408,7 +408,7 @@ for (yr in seasons) {
         )
 
     team_rb_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0)) %>%
         group_by(pos_team, rusher_player_name) %>%
         summarize_rusher_df() %>%
         ungroup() %>%
@@ -417,7 +417,7 @@ for (yr in seasons) {
         )
 
     team_wr_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0)) %>%
         group_by(pos_team, receiver_player_name) %>%
         summarize_receiver_df() %>%
         ungroup() %>%
@@ -426,14 +426,14 @@ for (yr in seasons) {
         )
 
     team_off_pass_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
         group_by(pos_team) %>%
         summarize_team_df(remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
     team_off_rush_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
         group_by(pos_team) %>%
         summarize_team_df(remove_cols = c(
             'start_position', 'start_position_rank'
@@ -442,7 +442,7 @@ for (yr in seasons) {
     print(glue("Summarizing defensive data"))
 
     team_def_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success)) %>%
         group_by(def_pos_team) %>%
         summarize_team_df(ascending = TRUE)
 
@@ -460,14 +460,14 @@ for (yr in seasons) {
         )
 
     team_def_pass_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & (pass == 1)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
         group_by(def_pos_team) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
     team_def_rush_data <- plays %>%
-        filter(!is.na(EPA) & !is.na(success) & (rush == 1)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
         group_by(def_pos_team) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
             'start_position', 'start_position_rank'
