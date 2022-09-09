@@ -348,8 +348,6 @@ for (yr in seasons) {
 
     plays <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school,
-            def_pos_team %in% valid_fbs_teams$school,
             (pass == 1) | (rush == 1),
             # ((wp_before >= 0.1) & (wp_before <= 0.9))
         ) %>%
@@ -381,11 +379,17 @@ for (yr in seasons) {
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))
 
     team_off_data <- plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success)) %>%
         group_by(pos_team) %>%
         summarize_team_df(ascending = FALSE)
 
     team_off_drives_data <- plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(drive_id)) %>%
         group_by(pos_team, drive_id) %>%
         summarize(
@@ -399,6 +403,9 @@ for (yr in seasons) {
         )
 
     team_qb_data <- plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
         group_by(pos_team, passer_player_name) %>%
         summarize_passer_df() %>%
@@ -408,6 +415,9 @@ for (yr in seasons) {
         )
 
     team_rb_data <- plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0)) %>%
         group_by(pos_team, rusher_player_name) %>%
         summarize_rusher_df() %>%
@@ -417,6 +427,9 @@ for (yr in seasons) {
         )
 
     team_wr_data <- plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0)) %>%
         group_by(pos_team, receiver_player_name) %>%
         summarize_receiver_df() %>%
@@ -426,6 +439,9 @@ for (yr in seasons) {
         )
 
     team_off_pass_data <- plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
         group_by(pos_team) %>%
         summarize_team_df(remove_cols = c(
@@ -433,6 +449,9 @@ for (yr in seasons) {
         ))
 
     team_off_rush_data <- plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
         group_by(pos_team) %>%
         summarize_team_df(remove_cols = c(
@@ -442,11 +461,17 @@ for (yr in seasons) {
     print(glue("Summarizing defensive data"))
 
     team_def_data <- plays %>%
+        filter(
+            def_pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success)) %>%
         group_by(def_pos_team) %>%
         summarize_team_df(ascending = TRUE)
 
     team_def_drives_data <- plays %>%
+        filter(
+            def_pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(drive_id)) %>%
         group_by(def_pos_team, drive_id) %>%
         summarize(
@@ -460,6 +485,9 @@ for (yr in seasons) {
         )
 
     team_def_pass_data <- plays %>%
+        filter(
+            def_pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
         group_by(def_pos_team) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
@@ -467,6 +495,9 @@ for (yr in seasons) {
         ))
 
     team_def_rush_data <- plays %>%
+        filter(
+            def_pos_team %in% valid_fbs_teams$school
+        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
         group_by(def_pos_team) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
