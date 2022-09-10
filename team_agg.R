@@ -340,6 +340,52 @@ prepare_for_write <- function(x) {
     return(tmp)
 }
 
+prepare_percentiles <- function(x) {
+    tmp <- x %>%
+        summarize(
+            EPAplay = mean(EPA, na.rm = TRUE),
+            success = mean(epa_success, na.rm = TRUE),
+            yardsplay = mean(yards_gained, na.rm = TRUE),
+            dropbacks = (sum(pass, na.rm = TRUE)),
+            rushes = (sum(rush, na.rm = TRUE)),
+            EPAdropback = case_when(
+                dropbacks == 0 ~ 0,
+                TRUE ~ (sum(pos_EPA_pass, na.rm = TRUE) / dropbacks)
+            ),
+            EPArush = case_when(
+                rushes == 0 ~ 0,
+                TRUE ~ (sum(pos_EPA_rush, na.rm = TRUE) / rushes)
+            ),
+            yardsdropback = case_when(
+                dropbacks == 0 ~ 0,
+                TRUE ~ ((sum(yds_receiving, na.rm = TRUE) + sum(yds_sacked, na.rm = TRUE)) / dropbacks)
+            ),
+            explosive = mean(explosive, na.rm = TRUE),
+            third_down_success = mean(third_down_success, na.rm = TRUE),
+            red_zone_success = mean(red_zone_success, na.rm = TRUE),
+            play_stuffed = mean(play_stuffed, na.rm = TRUE),
+            havoc = mean(havoc, na.rm = TRUE)
+        ) %>% ungroup()
+
+    summ_tmp <- tmp %>% summarize(
+        pctile = seq(.01, .99, by = .01),
+        EPAplay = quantile(EPAplay, probs = pctile, na.rm = TRUE),
+        success = quantile(success, probs = pctile, na.rm = TRUE),
+        yardsplay = quantile(yardsplay, probs = pctile, na.rm = TRUE),
+        EPAdropback = quantile(EPAdropback, probs = pctile, na.rm = TRUE),
+        EPArush = quantile(EPArush, probs = pctile, na.rm = TRUE),
+        yardsdropback = quantile(yardsdropback, probs = pctile, na.rm = TRUE),
+
+        explosive = quantile(explosive, probs = pctile, na.rm = TRUE),
+        third_down_success = quantile(third_down_success, probs = pctile, na.rm = TRUE),
+        red_zone_success = quantile(red_zone_success, probs = pctile, na.rm = TRUE),
+
+        play_stuffed = quantile(play_stuffed, probs = pctile, na.rm = TRUE),
+        havoc = quantile(havoc, probs = pctile, na.rm = TRUE),
+    )
+    return(summ_tmp)
+}
+
 for (yr in seasons) {
     print(glue("Starting processing for {yr} season..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
@@ -352,6 +398,16 @@ for (yr in seasons) {
             # ((wp_before >= 0.1) & (wp_before <= 0.9))
         ) %>%
         mutate(
+            pos_EPA_pass = case_when(
+                pos_team == home ~ home_EPA_pass,
+                pos_team == away ~ away_EPA_pass,
+                TRUE ~ NA_real_
+            ),
+            pos_EPA_rush = case_when(
+                pos_team == home ~ home_EPA_rush,
+                pos_team == away ~ away_EPA_rush,
+                TRUE ~ NA_real_
+            ),
             game_id = as.character(game_id),
             play_stuffed = (yards_gained <= 0),
             red_zone = (yards_to_goal <= 20),
@@ -378,11 +434,21 @@ for (yr in seasons) {
 
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))
 
-    team_off_data <- plays %>%
+    team_off_plays <- plays %>%
         filter(
             pos_team %in% valid_fbs_teams$school
         ) %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success)) %>%
+        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success))
+
+    team_off_pctls <- team_off_plays %>%
+        filter(
+            pos_team %in% valid_fbs_teams$school,
+            def_pos_team %in% valid_fbs_teams$school
+        ) %>%
+        group_by(game_id, pos_team) %>%
+        prepare_percentiles()
+
+    team_off_data <- team_off_plays %>%
         group_by(pos_team) %>%
         summarize_team_df(ascending = FALSE)
 
@@ -553,6 +619,7 @@ for (yr in seasons) {
     dir.create(file.path('./data', glue("{yr}")), showWarnings = FALSE)
 
     print(glue("Writing year CSVs to folder /data/{yr}"))
+    write.csv(team_off_pctls, glue("./data/{yr}/percentiles.csv"), row.names = FALSE)
     write.csv(team_data, glue("./data/{yr}/overall.csv"), row.names = FALSE)
     write.csv(team_qb_data, glue("./data/{yr}/passing.csv"), row.names = FALSE)
     write.csv(team_rb_data, glue("./data/{yr}/rushing.csv"), row.names = FALSE)
