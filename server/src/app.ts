@@ -9,6 +9,7 @@ import { Summary, SummaryRequest } from './interfaces/request';
 import { PassingStats, PlayerStatistics, PlayerSummary, ReceivingStats, RushingStats } from './interfaces/player-summary';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
+import { Percentile } from './interfaces/percentile';
 
 function parseName(item: any, type: SummaryType): string {
     let key = 'name';
@@ -434,6 +435,41 @@ async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
     
     return parseSummary(content, params.type ?? SummaryType.Overall);
 }
+
+async function retrievePercentiles(year: number): Promise<Percentile[]> {
+    const fileName: string = `./data/${year}/percentiles.csv`
+    console.log(`Looking for percentiles data at file path: ${fileName}`)
+    const content = await csvtojson().fromFile(fileName);
+    
+    return parsePercentiles(content);
+}
+
+function parsePercentiles(content: any[]): Percentile[] {
+    const result: Percentile[] = [];
+    for (const item of content) {
+        const pctl: Percentile = {
+            pctile: parseFloat(item.pctile),
+            epaPerPlay: parseFloat(item.EPAplay), // EPAplay
+            successRate: parseFloat(item.success), // success
+            yardsPerPlay: parseFloat(item.yardsplay), // yardsplay
+            epaPerDropback: parseFloat(item.EPAdropback), // EPAdropback
+            epaPerRush: parseFloat(item.EPArush), // EPArush
+            yardsPerDropback: parseFloat(item.yardsdropback), // yardsdropback
+        
+            explosivePlayRate: parseFloat(item.explosive), //explosive
+            thirdDownSuccessRate: parseFloat(item.third_down_success), // third_down_success
+            redZoneSuccessRate: parseFloat(item.red_zone_success), // red_zone_success
+        
+            playStuffedRate: parseFloat(item.play_stuffed), // play_stuffed
+            havocRate: parseFloat(item.havoc), //havoc
+        };
+        result.push(pctl);
+    }
+    result.sort((a, b): number => {
+        return a.pctile - b.pctile;
+    });
+    return result;
+}
  
 // Initialize the express engine
 const app: express.Application = express();
@@ -451,6 +487,21 @@ app.get('/health', (_req, _res) => {
         status: 'ok'
     })
 });
+
+app.get('/percentiles/:year', async (req, res, next) => {
+    console.debug('Received GET percentiles request with params ' + JSON.stringify(req.params));
+    try {
+        const content = await retrievePercentiles(parseInt(req.params.year));
+        return res.status(200).json({
+            results: content
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(404).json({
+            error: 'no data found'
+        });
+    }
+})
 
 app.post('/', async (req, res, next) => {
     const body = req.body;
