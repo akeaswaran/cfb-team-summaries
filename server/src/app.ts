@@ -441,13 +441,14 @@ async function retrievePercentiles(year: number): Promise<Percentile[]> {
     console.log(`Looking for percentiles data at file path: ${fileName}`)
     const content = await csvtojson().fromFile(fileName);
     
-    return parsePercentiles(content);
+    return parsePercentiles(year, content);
 }
 
-function parsePercentiles(content: any[]): Percentile[] {
+function parsePercentiles(year: number, content: any[]): Percentile[] {
     const result: Percentile[] = [];
     for (const item of content) {
         const pctl: Percentile = {
+            season: year,
             pctile: parseFloat(item.pctile),
             epaPerPlay: parseFloat(item.EPAplay), // EPAplay
             successRate: parseFloat(item.success), // success

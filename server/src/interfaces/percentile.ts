@@ -1,4 +1,5 @@
 export interface Percentile {
+    season: number
     pctile: number
     epaPerPlay: number // EPAplay
     successRate: number // success
