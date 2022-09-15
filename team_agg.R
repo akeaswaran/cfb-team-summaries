@@ -242,7 +242,7 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 third_down_success_rank = rank(third_down_success),
 
                 # except start position
-                start_position_rank = rank(-start_position),
+                start_position_rank = rank(start_position),
                 havoc_rank = rank(-havoc),
                 explosive_rank = rank(explosive),
                 passrate_rank = rank(-passrate),
