@@ -5,20 +5,30 @@ on:
     branches:
         - main
   schedule:
-    - cron: "0 12 * * 2"
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v1
-      - name: Build and Push Docker Image
-        uses:  mr-smithers-excellent/docker-build-push@v5.5
-        with:
-          image: ${{ github.repository }}
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          tags: latest
+#       - name: Checkout Code
+#         uses: actions/checkout@v1
+#       - name: Build and Push Docker Image
+#         uses:  mr-smithers-excellent/docker-build-push@v5.5
+#         with:
+#           image: ${{ github.repository }}
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
+#           tags: latest
+      - name: Redeploy GameOnPaper
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: |
+          curl \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            https://api.github.com/repos/saiemgilani/game-on-paper/actions/workflows/deploy/dispatches \
+            -d '{"ref":"main"}'
