@@ -22,4 +22,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           tags: latest
-      - uses: saiemgilani/game-on-paper-app/.github/workflows/deploy.yml@main
+  redeploy-gop:
+    uses: saiemgilani/game-on-paper-app/.github/workflows/deploy.yml@main
