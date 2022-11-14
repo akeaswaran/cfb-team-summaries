@@ -23,4 +23,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           tags: latest
   redeploy-gop:
+    needs: deploy
     uses: saiemgilani/game-on-paper-app/.github/workflows/deploy.yml@main
