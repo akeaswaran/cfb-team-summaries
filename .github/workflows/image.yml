@@ -24,4 +24,6 @@ jobs:
           tags: latest
   redeploy-gop:
     needs: deploy
+    permissions:
+      packages: write
     uses: saiemgilani/game-on-paper-app/.github/workflows/deploy.yml@main
