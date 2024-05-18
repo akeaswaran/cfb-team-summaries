@@ -127,6 +127,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         explosiveRateRank: item.explosive_off_rank,
                         havocRate: item.havoc_off,
                         havocRateRank: item.havoc_off_rank,
+
+                        epaPerDrive: item.EPAdrive_off,
+                        epaPerDriveRank: item.EPAdrive_off_rank,
+                        lateDownSuccessRate: item.late_down_success_off,
+                        lateDownSuccessRateRank: item.late_down_success_off_rank,
+                        earlyDownEPAPerPlay: item.early_down_EPA_off,
+                        earlyDownEPAPerPlayRank: item.early_down_EPA_off_rank,
+                        thirdDownDistance: item.third_down_distance_off,
+                        thirdDownDistanceRank: item.third_down_distance_off_rank
                     },
                     passing: {
                         totalPlays: item.plays_off_pass,
@@ -163,6 +172,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         explosiveRateRank: item.explosive_off_pass_rank,
                         havocRate: item.havoc_off_pass,
                         havocRateRank: item.havoc_off_pass_rank,
+
+                        epaPerDrive: item.EPAdrive_off_pass,
+                        epaPerDriveRank: item.EPAdrive_off_pass_rank,
+                        lateDownSuccessRate: item.late_down_success_off_pass,
+                        lateDownSuccessRateRank: item.late_down_success_off_pass_rank,
+                        earlyDownEPAPerPlay: item.early_down_EPA_off_pass,
+                        earlyDownEPAPerPlayRank: item.early_down_EPA_off_pass_rank,
+                        thirdDownDistance: item.third_down_distance_off_pass,
+                        thirdDownDistanceRank: item.third_down_distance_off_pass_rank
                     },
                     rushing: {
                         totalPlays: item.plays_off_rush,
@@ -199,6 +217,16 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         explosiveRateRank: item.explosive_off_rush_rank,
                         havocRate: item.havoc_off_rush,
                         havocRateRank: item.havoc_off_rush_rank,
+
+                        epaPerDrive: item.EPAdrive_off_rush,
+                        epaPerDriveRank: item.EPAdrive_off_rush_rank,
+                        lateDownSuccessRate: item.late_down_success_off_rush,
+                        lateDownSuccessRateRank: item.late_down_success_off_rush_rank,
+                        earlyDownEPAPerPlay: item.early_down_EPA_off_rush,
+                        earlyDownEPAPerPlayRank: item.early_down_EPA_off_rush_rank,
+                        thirdDownDistance: item.third_down_distance_off_rush,
+                        thirdDownDistanceRank: item.third_down_distance_off_rush_rank
+                        
                     }
                 },
                 defensive: {
@@ -245,6 +273,16 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         explosiveRateRank: item.explosive_def_rank,
                         havocRate: item.havoc_def,
                         havocRateRank: item.havoc_def_rank,
+
+                        epaPerDrive: item.EPAdrive_def,
+                        epaPerDriveRank: item.EPAdrive_def_rank,
+                        lateDownSuccessRate: item.late_down_success_def,
+                        lateDownSuccessRateRank: item.late_down_success_def_rank,
+                        earlyDownEPAPerPlay: item.early_down_EPA_def,
+                        earlyDownEPAPerPlayRank: item.early_down_EPA_def_rank,
+                        thirdDownDistance: item.third_down_distance_def,
+                        thirdDownDistanceRank: item.third_down_distance_def_rank
+                        
                     },
                     passing: {
                         totalPlays: item.plays_def_pass,
@@ -281,6 +319,16 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         explosiveRateRank: item.explosive_def_pass_rank,
                         havocRate: item.havoc_def_pass,
                         havocRateRank: item.havoc_def_pass_rank,
+
+                        epaPerDrive: item.EPAdrive_def_pass,
+                        epaPerDriveRank: item.EPAdrive_def_pass_rank,
+                        lateDownSuccessRate: item.late_down_success_def_pass,
+                        lateDownSuccessRateRank: item.late_down_success_def_pass_rank,
+                        earlyDownEPAPerPlay: item.early_down_EPA_def_pass,
+                        earlyDownEPAPerPlayRank: item.early_down_EPA_def_pass_rank,
+
+                        thirdDownDistance: item.third_down_distance_def_pass,
+                        thirdDownDistanceRank: item.third_down_distance_def_pass_rank
                     },
                     rushing: {
                         totalPlays: item.plays_def_rush,
@@ -317,6 +365,16 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         explosiveRateRank: item.explosive_def_rush_rank,
                         havocRate: item.havoc_def_rush,
                         havocRateRank: item.havoc_def_rush_rank,
+
+                        epaPerDrive: item.EPAdrive_def_rush,
+                        epaPerDriveRank: item.EPAdrive_def_rush_rank,
+                        lateDownSuccessRate: item.late_down_success_def_rush,
+                        lateDownSuccessRateRank: item.late_down_success_def_rush_rank,
+                        earlyDownEPAPerPlay: item.early_down_EPA_def_rush,
+                        earlyDownEPAPerPlayRank: item.early_down_EPA_def_rush_rank,
+
+                        thirdDownDistance: item.third_down_distance_def_rush,
+                        thirdDownDistanceRank: item.third_down_distance_def_rush_rank
                     }
                 },
                 differential: {
@@ -347,7 +405,10 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         totalAvailableYardsRank: item.total_available_yards_margin_rank,
                         totalGainedYardsRank: item.total_gained_yards_margin_rank,
-                        availableYardsPctRank: item.available_yards_pct_margin_rank
+                        availableYardsPctRank: item.available_yards_pct_margin_rank,
+
+                        epaPerDrive: item.EPAdrive_margin,
+                        epaPerDriveRank: item.EPAdrive_margin_rank
                     },
                     passing: {
                         totalEPA: item.TEPA_margin_pass,
@@ -368,7 +429,10 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_margin_pass_rank,
                         yardsPerPlayRank: item.yardsplay_margin_pass_rank,
-                        yardsPerGameRank: item.yardsgame_margin_pass_rank
+                        yardsPerGameRank: item.yardsgame_margin_pass_rank,
+
+                        epaPerDrive: item.EPAdrive_margin_pass,
+                        epaPerDriveRank: item.EPAdrive_margin_pass_rank
                     },
                     rushing: {
                         totalEPA: item.TEPA_margin_rush,
@@ -389,7 +453,10 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
 
                         yardsRank: item.yards_margin_rush_rank,
                         yardsPerPlayRank: item.yardsplay_margin_rush_rank,
-                        yardsPerGameRank: item.yardsgame_margin_rush_rank
+                        yardsPerGameRank: item.yardsgame_margin_rush_rank,
+
+                        epaPerDrive: item.EPAdrive_margin_rush,
+                        epaPerDriveRank: item.EPAdrive_margin_rush_rank
                     }
                 }
             };

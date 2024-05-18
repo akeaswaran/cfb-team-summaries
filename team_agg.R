@@ -198,6 +198,7 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 # EPA + EPA/play
                 TEPA = sum(EPA),
                 EPAplay = mean(EPA),
+                EPAdrive = TEPA / length(unique(drive_id)),
                 EPAgame = TEPA / length(unique(game_id)),
 
                 # yards
@@ -216,9 +217,15 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 success = mean(epa_success),
                 red_zone_success = mean(red_zone_success, na.rm = TRUE),
                 third_down_success = mean(third_down_success, na.rm = TRUE),
+                third_down_distance = mean(third_down_distance, na.rm = TRUE),
+                late_down_success = mean(late_down_success, na.rm = TRUE),
+                early_down_EPA = mean(early_down_EPA, na.rm = T),
 
                 # Field Position
                 start_position = mean(drive_start_yards_to_goal),
+
+                # Available Yards Pct
+                # available_yards_pct = mean(available_yards_pct, na.rm = T)
             )
     if (ascending) {
         tmp <- tmp %>%
@@ -228,6 +235,8 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 TEPA_rank = rank(TEPA),
                 EPAgame_rank = rank(EPAgame),
                 EPAplay_rank = rank(EPAplay),
+                EPAdrive_rank = rank(EPAdrive),
+                early_down_EPA_rank = rank(early_down_EPA),
                 success_rank = rank(success),
 
                 yards_rank = rank(yards),
@@ -241,8 +250,11 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 play_stuffed_rank = rank(play_stuffed),
                 red_zone_success_rank = rank(red_zone_success),
                 third_down_success_rank = rank(third_down_success),
+                late_down_success_rank = rank(late_down_success),
+                # available_yards_pct = rank(available_yards_pct),
 
                 # except start position
+                third_down_distance_rank = rank(-third_down_distance),
                 start_position_rank = rank(-start_position),
                 havoc_rank = rank(-havoc),
                 explosive_rank = rank(explosive),
@@ -259,6 +271,8 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 TEPA_rank = rank(-TEPA),
                 EPAgame_rank = rank(-EPAgame),
                 EPAplay_rank = rank(-EPAplay),
+                EPAdrive_rank = rank(-EPAdrive),
+                early_down_EPA_rank = rank(-early_down_EPA),
                 success_rank = rank(-success),
 
                 yards_rank = rank(-yards),
@@ -272,7 +286,10 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 play_stuffed_rank = rank(-play_stuffed),
                 red_zone_success_rank = rank(-red_zone_success),
                 third_down_success_rank = rank(-third_down_success),
+                late_down_success_rank = rank(-late_down_success),
+                # available_yards_pct = rank(-available_yards_pct),
 
+                third_down_distance_rank = rank(third_down_distance),
                 start_position_rank = rank(start_position),
                 havoc_rank = rank(havoc),
                 explosive_rank = rank(-explosive),
@@ -291,6 +308,7 @@ mutate_summary_df <- function(x) {
         mutate(
             TEPA_margin = TEPA_off - TEPA_def,
             EPAplay_margin = EPAplay_off - EPAplay_def,
+            EPAdrive_margin = EPAdrive_off - EPAdrive_def,
             EPAgame_margin = EPAgame_off - EPAgame_def,
             success_margin = success_off - success_def,
 
@@ -299,6 +317,7 @@ mutate_summary_df <- function(x) {
 
             TEPA_margin_rank = rank(-TEPA_margin),
             EPAgame_margin_rank = rank(-EPAgame_margin),
+            EPAdrive_margin_rank = rank(-EPAdrive_margin),
             EPAplay_margin_rank = rank(-EPAplay_margin),
             success_margin_rank = rank(-success_margin),
 
@@ -422,6 +441,18 @@ for (yr in seasons) {
                 (as.numeric(down) == 3) ~ epa_success,
                 TRUE ~ NA_real_
             ),
+            late_down_success = case_when(
+                (as.numeric(down) >= 3) ~ epa_success,
+                TRUE ~ NA_real_
+            ),
+            third_down_distance = case_when(
+                (as.numeric(down) == 3) ~ distance,
+                TRUE ~ NA_real_
+            ),
+            early_down_EPA = case_when(
+                (as.numeric(down) <= 2) ~ EPA,
+                TRUE ~ NA_real_
+            ),
             havoc = (sack_vec | int | fumble_vec | !is.na(pass_breakup_player_name) | (yards_gained < 0)),
             explosive = case_when(
                 (pass == 1) ~ (EPA >= 2.4),
@@ -463,10 +494,16 @@ for (yr in seasons) {
             total_available_yards = first(drive_start_yards_to_goal),
             total_gained_yards = last(drive_yards),
         ) %>%
+        ungroup() %>%
+        group_by(pos_team) %>%
         summarize(
             total_available_yards = sum(total_available_yards),
             total_gained_yards = sum(total_gained_yards),
             available_yards_pct = total_gained_yards / total_available_yards
+        ) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(
+            available_yards_pct_rank = rank(-available_yards_pct)
         )
 
     team_qb_data <- plays %>%
@@ -545,10 +582,16 @@ for (yr in seasons) {
             total_available_yards = first(drive_start_yards_to_goal),
             total_gained_yards = last(drive_yards),
         ) %>%
+        ungroup() %>%
+        group_by(def_pos_team) %>%
         summarize(
             total_available_yards = sum(total_available_yards),
             total_gained_yards = sum(total_gained_yards),
             available_yards_pct = total_gained_yards / total_available_yards
+        ) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(
+            available_yards_pct_rank = rank(available_yards_pct)
         )
 
     team_def_pass_data <- plays %>%

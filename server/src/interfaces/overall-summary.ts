@@ -32,6 +32,7 @@ export interface SituationWrapper<T> {
 export interface Segment {
     totalEPA: number
     epaPerPlay: number
+    epaPerDrive: number
     epaPerGame: number
     successRate: number
     startingFP: number
@@ -41,6 +42,7 @@ export interface Segment {
 
     totalEPARank: number
     epaPerPlayRank: number
+    epaPerDriveRank: number
     epaPerGameRank: number
     successRateRank: number
     startingFPRank: number
@@ -53,9 +55,16 @@ export interface SituationalSuccess {
     stuffedPlayRate: number
     redZoneSuccessRate: number
     thirdDownSuccessRate: number
+    thirdDownDistance: number
+    lateDownSuccessRate: number
+    earlyDownEPAPerPlay: number
+
     stuffedPlayRateRank: number
     redZoneSuccessRateRank: number
     thirdDownSuccessRateRank: number
+    thirdDownDistanceRank: number
+    lateDownSuccessRateRank: number
+    earlyDownEPAPerPlayRank: number
 
     havocRate: number
     havocRateRank: number

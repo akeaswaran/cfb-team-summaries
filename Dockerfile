@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:4.1.0 as rbase
+FROM rocker/tidyverse:4.3 as rbase
 
 WORKDIR /src
 
@@ -14,7 +14,7 @@ COPY ./team_agg.R .
 
 RUN Rscript ./team_agg.R skipcache
 
-FROM node:17 as nodebase
+FROM node:lts as nodebase
 WORKDIR /root/src
 
 COPY ./server ./
