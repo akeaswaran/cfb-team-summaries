@@ -1,3 +1,7 @@
+gt_graphics.R
+*.png
+.env
+
 # History files
 .Rhistory
 .Rapp.history

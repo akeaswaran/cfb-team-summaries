@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:4.3 as rbase
+FROM rocker/tidyverse:4.3 AS rbase
 
 WORKDIR /src
 
@@ -8,13 +8,13 @@ RUN install2.r --error \
     glue \
     devtools
 
-RUN Rscript -e 'devtools::install_github(repo = "saiemgilani/cfbfastR")'
+RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
 
 COPY ./team_agg.R .
 
 RUN Rscript ./team_agg.R skipcache
 
-FROM node:lts as nodebase
+FROM node:lts AS nodebase
 WORKDIR /root/src
 
 COPY ./server ./
@@ -32,5 +32,5 @@ COPY --from=nodebase /root/src/src/node_modules ./node_modules
 ENV PORT=3000
 EXPOSE 3000
 
-CMD node ./app.js
+CMD ["node", "./app.js"]
 
