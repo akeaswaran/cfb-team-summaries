@@ -10,6 +10,9 @@ import { PassingStats, PlayerStatistics, PlayerSummary, ReceivingStats, RushingS
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import { Percentile } from './interfaces/percentile';
+import fs from 'fs';
+
+const lastUpdated = fs.statSync("./data/2024/overall.csv")['mtime'];
 
 function parseName(item: any, type: SummaryType): string {
     let key = 'name';
@@ -599,6 +602,19 @@ app.post('/', async (req, res, next) => {
         });
     }
 });
+
+app.get("/updated", async (req, res, next) => {
+    try {
+        return res.status(200).json({
+            last_updated: lastUpdated
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(404).json({
+            error: 'no data found'
+        });
+    }
+})
 
 // Server setup
 const port: string = process.env.PORT || '3000';
