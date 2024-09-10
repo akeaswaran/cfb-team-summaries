@@ -502,7 +502,7 @@ for (yr in seasons) {
                 .default = NA_real_
             ),
             nonExplosiveEpa = dplyr::case_when(
-                !is.na(EPA) & explosive ~ EPA,
+                !is.na(EPA) & (explosive == F) ~ EPA,
                 .default = NA_real_
             )
         )
