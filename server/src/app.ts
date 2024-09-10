@@ -138,7 +138,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         earlyDownEPAPerPlay: item.early_down_EPA_off,
                         earlyDownEPAPerPlayRank: item.early_down_EPA_off_rank,
                         thirdDownDistance: item.third_down_distance_off,
-                        thirdDownDistanceRank: item.third_down_distance_off_rank
+                        thirdDownDistanceRank: item.third_down_distance_off_rank,
+
+                        nonExplosiveEpaPerPlay: item.nonExplosiveEpaPerPlay_off,
+                        nonExplosiveEpaPerPlayRank: item.nonExplosiveEpaPerPlay_off_rank,
+                        lineYards: item.line_yards_off,
+                        lineYardsRank: item.line_yards_off_rank,
+                        opportunityRate: item.opportunity_rate_off,
+                        opportunityRateRank: item.opportunity_rate_off_rank,
                     },
                     passing: {
                         totalPlays: item.plays_off_pass,
@@ -183,7 +190,15 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         earlyDownEPAPerPlay: item.early_down_EPA_off_pass,
                         earlyDownEPAPerPlayRank: item.early_down_EPA_off_pass_rank,
                         thirdDownDistance: item.third_down_distance_off_pass,
-                        thirdDownDistanceRank: item.third_down_distance_off_pass_rank
+                        thirdDownDistanceRank: item.third_down_distance_off_pass_rank,
+
+
+                        nonExplosiveEpaPerPlay: item.nonExplosiveEpaPerPlay_off_pass,
+                        nonExplosiveEpaPerPlayRank: item.nonExplosiveEpaPerPlay_off_pass_rank,
+                        lineYards: item.line_yards_off_pass,
+                        lineYardsRank: item.line_yards_off_pass_rank,
+                        opportunityRate: item.opportunity_rate_off_pass,
+                        opportunityRateRank: item.opportunity_rate_off_pass_rank,
                     },
                     rushing: {
                         totalPlays: item.plays_off_rush,
@@ -228,8 +243,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         earlyDownEPAPerPlay: item.early_down_EPA_off_rush,
                         earlyDownEPAPerPlayRank: item.early_down_EPA_off_rush_rank,
                         thirdDownDistance: item.third_down_distance_off_rush,
-                        thirdDownDistanceRank: item.third_down_distance_off_rush_rank
-                        
+                        thirdDownDistanceRank: item.third_down_distance_off_rush_rank,
+
+                        nonExplosiveEpaPerPlay: item.nonExplosiveEpaPerPlay_off_rush,
+                        nonExplosiveEpaPerPlayRank: item.nonExplosiveEpaPerPlay_off_rush_rank,
+                        lineYards: item.line_yards_off_rush,
+                        lineYardsRank: item.line_yards_off_rush_rank,
+                        opportunityRate: item.opportunity_rate_off_rush,
+                        opportunityRateRank: item.opportunity_rate_off_rush_rank,
                     }
                 },
                 defensive: {
@@ -284,8 +305,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         earlyDownEPAPerPlay: item.early_down_EPA_def,
                         earlyDownEPAPerPlayRank: item.early_down_EPA_def_rank,
                         thirdDownDistance: item.third_down_distance_def,
-                        thirdDownDistanceRank: item.third_down_distance_def_rank
-                        
+                        thirdDownDistanceRank: item.third_down_distance_def_rank,
+
+                        nonExplosiveEpaPerPlay: item.nonExplosiveEpaPerPlay_def,
+                        nonExplosiveEpaPerPlayRank: item.nonExplosiveEpaPerPlay_def_rank,
+                        lineYards: item.line_yards_def,
+                        lineYardsRank: item.line_yards_def_rank,
+                        opportunityRate: item.opportunity_rate_def,
+                        opportunityRateRank: item.opportunity_rate_def_rank,
                     },
                     passing: {
                         totalPlays: item.plays_def_pass,
@@ -331,7 +358,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         earlyDownEPAPerPlayRank: item.early_down_EPA_def_pass_rank,
 
                         thirdDownDistance: item.third_down_distance_def_pass,
-                        thirdDownDistanceRank: item.third_down_distance_def_pass_rank
+                        thirdDownDistanceRank: item.third_down_distance_def_pass_rank,
+
+                        nonExplosiveEpaPerPlay: item.nonExplosiveEpaPerPlay_def_pass,
+                        nonExplosiveEpaPerPlayRank: item.nonExplosiveEpaPerPlay_def_pass_rank,
+                        lineYards: item.line_yards_def_pass,
+                        lineYardsRank: item.line_yards_def_pass_rank,
+                        opportunityRate: item.opportunity_rate_def_pass,
+                        opportunityRateRank: item.opportunity_rate_def_pass_rank,
                     },
                     rushing: {
                         totalPlays: item.plays_def_rush,
@@ -377,7 +411,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         earlyDownEPAPerPlayRank: item.early_down_EPA_def_rush_rank,
 
                         thirdDownDistance: item.third_down_distance_def_rush,
-                        thirdDownDistanceRank: item.third_down_distance_def_rush_rank
+                        thirdDownDistanceRank: item.third_down_distance_def_rush_rank,
+
+                        nonExplosiveEpaPerPlay: item.nonExplosiveEpaPerPlay_def_rush,
+                        nonExplosiveEpaPerPlayRank: item.nonExplosiveEpaPerPlay_def_rush_rank,
+                        lineYards: item.line_yards_def_rush,
+                        lineYardsRank: item.line_yards_def_rush_rank,
+                        opportunityRate: item.opportunity_rate_def_rush,
+                        opportunityRateRank: item.opportunity_rate_def_rush_rank,
                     }
                 },
                 differential: {

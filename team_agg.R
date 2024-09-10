@@ -224,6 +224,11 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 # Field Position
                 start_position = mean(drive_start_yards_to_goal),
 
+                # Profile stuff
+                nonExplosiveEpaPerPlay = mean(nonExplosiveEpa, na.rm = T),
+                line_yards = mean(line_yards, na.rm = T),
+                opportunity_rate = mean(opportunity_run, na.rm = T),
+
                 # Available Yards Pct
                 # available_yards_pct = mean(available_yards_pct, na.rm = T)
             )
@@ -260,8 +265,11 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 explosive_rank = rank(explosive),
                 passrate_rank = rank(-passrate),
                 rushrate_rank = rank(-rushrate),
-                # edrushrate_rank = rank(-edrushrate),
-                # edpassrate_rank = rank(-edpassrate)
+
+                # Profile stuff
+                nonExplosiveEpaPerPlay_rank = rank(nonExplosiveEpaPerPlay),
+                line_yards_rank = rank(line_yards),
+                opportunity_rate_rank = rank(opportunity_rate),
             )
     } else {
         tmp <- tmp %>%
@@ -295,6 +303,11 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 explosive_rank = rank(-explosive),
                 passrate_rank = rank(-passrate),
                 rushrate_rank = rank(-rushrate),
+
+                # Profile stuff
+                nonExplosiveEpaPerPlay_rank = rank(-nonExplosiveEpaPerPlay),
+                line_yards_rank = rank(-line_yards),
+                opportunity_rate_rank = rank(-opportunity_rate),
                 # edrushrate_rank = rank(-edrushrate),
                 # edpassrate_rank = rank(-edpassrate)
             )
@@ -458,10 +471,40 @@ for (yr in seasons) {
                 (pass == 1) ~ (EPA >= 2.4),
                 (rush == 1) ~ (EPA >= 1.8),
                 TRUE ~ FALSE
+            ),
+            opportunity_run = ((rush == 1) & (yds_rushed >= 4)),
+            adj_rush_yardage = dplyr::case_when(
+                (rush == 1) & (yds_rushed > 10) ~ 10,
+                (rush == 1) & (yds_rushed <= 10) ~ yds_rushed,
+                .default = NA_real_
+            ),
+            line_yards = dplyr::case_when(
+                (rush == 1) & (yds_rushed < 0) ~ (1.2 * adj_rush_yardage),
+                (rush == 1) & (yds_rushed >= 0) & (yds_rushed <= 4) ~ adj_rush_yardage,
+                (rush == 1) & (yds_rushed >= 5) & (yds_rushed <= 10) ~ (0.5 * adj_rush_yardage),
+                (rush == 1) & (yds_rushed >= 11) ~ 0,
+                .default = NA_real_
+            ),
+            second_level_yards = dplyr::case_when(
+                (rush == 1) & (yds_rushed >= 5) ~ (0.5 * (adj_rush_yardage - 5)),
+                (rush == 1) ~ 0,
+                .default = NA_real_
+            ),
+            open_field_yards = dplyr::case_when(
+                (rush == 1) & (yds_rushed > 10) ~ (yds_rushed - adj_rush_yardage),
+                (rush == 1) ~ 0,
+                .default = NA_real_
+            ),
+            highlight_yards = second_level_yards + open_field_yards,
+            opp_highlight_yards = dplyr::case_when(
+                (opportunity_run == T) ~ highlight_yards,
+                (opportunity_run == F) & (rush == 1) ~ 0,
+                .default = NA_real_
+            ),
+            nonExplosiveEpa = dplyr::case_when(
+                !is.na(EPA) & explosive ~ EPA,
+                .default = NA_real_
             )
-            # early_down = (down < 3),
-            # early_downs_rush = (rush & early_down),
-            # early_downs_pass = (pass & early_down),
         )
 
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))

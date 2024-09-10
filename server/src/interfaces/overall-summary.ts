@@ -71,4 +71,11 @@ export interface SituationalSuccess {
 
     explosiveRate: number
     explosiveRateRank: number
+
+    nonExplosiveEpaPerPlay: number
+    nonExplosiveEpaPerPlayRank: number
+    lineYards: number
+    lineYardsRank: number
+    opportunityRate: number
+    opportunityRateRank: number
 }
