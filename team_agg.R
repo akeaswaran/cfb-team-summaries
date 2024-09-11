@@ -62,27 +62,8 @@ summarize_passer_df <- function(x) {
             dropbacks = att + sacked,
             sack_adj_yards = yards - abs(sack_yds),
             yardsdropback = sack_adj_yards / dropbacks
-        )
-
-    tmp <- tmp %>%
-        ungroup() %>%
-        mutate(
-            TEPA_rank = rank(-TEPA),
-            EPAgame_rank = rank(-EPAgame),
-            EPAplay_rank = rank(-EPAplay),
-            success_rank = rank(-success),
-            comppct_rank = rank(-comppct),
-
-            yards_rank = rank(-yards),
-            yardsplay_rank = rank(-yardsplay),
-            yardsgame_rank = rank(-yardsgame),
-            sack_adj_yards_rank = rank(-sack_adj_yards),
-            yardsdropback_rank = rank(-yardsdropback),
-
-            detmer_rank = rank(-detmer),
-            detmergame_rank = rank(-detmergame)
-        )
-
+        ) %>%
+        ungroup()
     return(tmp)
 }
 
@@ -116,21 +97,8 @@ summarize_receiver_df <- function(x) {
 
             passing_td = sum(pass_td),
             fumbles = sum(fumble_vec),
-        )
-
-    tmp <- tmp %>%
-        ungroup() %>%
-        mutate(
-            TEPA_rank = rank(-TEPA),
-            EPAgame_rank = rank(-EPAgame),
-            EPAplay_rank = rank(-EPAplay),
-            success_rank = rank(-success),
-            catchpct_rank = rank(-catchpct),
-
-            yards_rank = rank(-yards),
-            yardsplay_rank = rank(-yardsplay),
-            yardsgame_rank = rank(-yardsgame)
-        )
+        ) %>%
+        ungroup()
 
     return(tmp)
 }
@@ -161,20 +129,8 @@ summarize_rusher_df <- function(x) {
 
             rushing_td = sum(rush_td),
             fumbles = sum(fumble_vec),
-        )
-
-    tmp <- tmp %>%
-        ungroup() %>%
-        mutate(
-            TEPA_rank = rank(-TEPA),
-            EPAgame_rank = rank(-EPAgame),
-            EPAplay_rank = rank(-EPAplay),
-            success_rank = rank(-success),
-
-            yards_rank = rank(-yards),
-            yardsplay_rank = rank(-yardsplay),
-            yardsgame_rank = rank(-yardsgame),
-        )
+        ) %>%
+        ungroup()
 
     return(tmp)
 }
@@ -556,10 +512,50 @@ for (yr in seasons) {
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
         group_by(pos_team, passer_player_name) %>%
         summarize_passer_df() %>%
-        ungroup() %>%
+        ungroup()
+
+    team_qb_ranks <- team_qb_data %>%
         filter(
             plays > quantile(plays, 0.25) # leaderboard minimums
+        ) %>%
+        mutate(
+            TEPA_rank = rank(-TEPA),
+            EPAgame_rank = rank(-EPAgame),
+            EPAplay_rank = rank(-EPAplay),
+            success_rank = rank(-success),
+            comppct_rank = rank(-comppct),
+
+            yards_rank = rank(-yards),
+            yardsplay_rank = rank(-yardsplay),
+            yardsgame_rank = rank(-yardsgame),
+            sack_adj_yards_rank = rank(-sack_adj_yards),
+            yardsdropback_rank = rank(-yardsdropback),
+
+            detmer_rank = rank(-detmer),
+            detmergame_rank = rank(-detmergame)
+        ) %>%
+        dplyr::select(
+            pos_team, 
+            passer_player_name,
+            TEPA_rank,
+            EPAgame_rank,
+            EPAplay_rank,
+            success_rank,
+            comppct_rank,
+
+            yards_rank,
+            yardsplay_rank,
+            yardsgame_rank,
+            sack_adj_yards_rank,
+            yardsdropback_rank,
+
+            detmer_rank,
+            detmergame_rank,
         )
+
+    team_qb_data = team_qb_data %>%
+        dplyr::left_join(team_qb_ranks, by = c("pos_team", "passer_player_name"))
+
 
     team_rb_data <- plays %>%
         filter(
@@ -568,10 +564,37 @@ for (yr in seasons) {
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0)) %>%
         group_by(pos_team, rusher_player_name) %>%
         summarize_rusher_df() %>%
-        ungroup() %>%
+        ungroup()
+
+    team_rb_ranks = team_rb_data %>%
         filter(
             plays > quantile(plays, 0.25) # leaderboard minimums
+        ) %>%
+        mutate(
+            TEPA_rank = rank(-TEPA),
+            EPAgame_rank = rank(-EPAgame),
+            EPAplay_rank = rank(-EPAplay),
+            success_rank = rank(-success),
+
+            yards_rank = rank(-yards),
+            yardsplay_rank = rank(-yardsplay),
+            yardsgame_rank = rank(-yardsgame),
+        ) %>%
+        dplyr::select(
+            pos_team, 
+            rusher_player_name,
+            TEPA_rank,
+            EPAgame_rank,
+            EPAplay_rank,
+            success_rank,
+
+            yards_rank,
+            yardsplay_rank,
+            yardsgame_rank,
         )
+
+    team_rb_data = team_rb_data %>%
+        dplyr::left_join(team_rb_ranks, by = c("pos_team", "rusher_player_name"))
 
     team_wr_data <- plays %>%
         filter(
@@ -580,10 +603,40 @@ for (yr in seasons) {
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0)) %>%
         group_by(pos_team, receiver_player_name) %>%
         summarize_receiver_df() %>%
-        ungroup() %>%
+        ungroup()
+
+    team_wr_ranks = team_wr_data %>%
         filter(
             plays > quantile(plays, 0.25) # leaderboard minimums
+        ) %>%
+        mutate(
+            TEPA_rank = rank(-TEPA),
+            EPAgame_rank = rank(-EPAgame),
+            EPAplay_rank = rank(-EPAplay),
+            success_rank = rank(-success),
+            catchpct_rank = rank(-catchpct),
+
+            yards_rank = rank(-yards),
+            yardsplay_rank = rank(-yardsplay),
+            yardsgame_rank = rank(-yardsgame)
+        ) %>%
+        dplyr::select(
+            pos_team, 
+            receiver_player_name,
+            TEPA_rank,
+            EPAgame_rank,
+            EPAplay_rank,
+            success_rank,
+            catchpct_rank,
+
+            yards_rank,
+            yardsplay_rank,
+            yardsgame_rank,
         )
+
+    team_wr_data = team_wr_data %>%
+        dplyr::left_join(team_wr_ranks, by = c("pos_team", "receiver_player_name"))
+    
 
     team_off_pass_data <- plays %>%
         filter(

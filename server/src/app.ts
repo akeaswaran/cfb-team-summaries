@@ -6,7 +6,7 @@ import csvtojson from 'csvtojson';
 import { TeamSummary } from './interfaces/overall-summary';
 import { SummaryType } from './enums/summary-types';
 import { Summary, SummaryRequest } from './interfaces/request';
-import { PassingStats, PlayerStatistics, PlayerSummary, ReceivingStats, RushingStats } from './interfaces/player-summary';
+import { PassingStats, PlayerStatistics, PlayerSummary, ReceivingStats, RushingStats, AdvancedPlayerStats } from './interfaces/player-summary';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import { Percentile } from './interfaces/percentile';
@@ -24,6 +24,24 @@ function parseName(item: any, type: SummaryType): string {
         key = 'receiver_player_name';
     }
     return item[key];
+}
+
+function parseAdvanced(item: any): AdvancedPlayerStats {
+    let stats: any = {
+        totalEPA: item.TEPA,
+        epaPerPlay: item.EPAplay,
+        epaPerGame: item.EPAgame,
+        successRate: item.success,
+    
+        totalEPARank: item.TEPA_rank,
+        epaPerPlayRank: item.EPAplay_rank,
+        epaPerGameRank: item.EPAgame_rank,
+        successRateRank: item.success_rank
+    }
+    Object.keys(stats).forEach(key => {
+        stats[key] = (stats[key] == "NA") ? null : parseFloat(stats[key])
+    })
+    return <AdvancedPlayerStats>stats;
 }
 
 function parseStats(item: any, type: SummaryType): PlayerStatistics {
@@ -45,7 +63,7 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
         (<PassingStats>stats).completionPct = item.comppct;
         (<PassingStats>stats).touchdowns = item.passing_td;
         (<PassingStats>stats).sacks = item.sacked;
-        (<PassingStats>stats).sackYards = item.sack_yds == "NA" ? "0" : item.sack_yds;
+        (<PassingStats>stats).sackYards = item.sack_yds;
         (<PassingStats>stats).interceptions = item.pass_int;
         (<PassingStats>stats).detmer = item.detmer;
         (<PassingStats>stats).detmerPerGame = item.detmergame;
@@ -73,7 +91,7 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
         (<ReceivingStats>stats).catchPctRank = item.catchpct_rank
     }
     Object.keys(stats).forEach(key => {
-        stats[key] = parseFloat(stats[key])
+        stats[key] = (stats[key] == "NA") ? null : parseFloat(stats[key])
     })
     return <PlayerStatistics>stats;
 }
@@ -508,23 +526,13 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
         }
     } else {
         for (const item of content) {
-            const summ: PlayerSummary = {
+            let summ: PlayerSummary = {
                 season: item.season,
                 teamId: item.team_id,
                 team: item.pos_team,
                 name: parseName(item, type),
                 playerId: item.player_id,
-                advanced: {
-                    totalEPA: item.TEPA,
-                    epaPerPlay: item.EPAplay,
-                    epaPerGame: item.EPAgame,
-                    successRate: item.success,
-                
-                    totalEPARank: item.TEPA_rank,
-                    epaPerPlayRank: item.EPAplay_rank,
-                    epaPerGameRank: item.EPAgame_rank,
-                    successRateRank: item.success_rank
-                },
+                advanced: parseAdvanced(item),
                 statistics: parseStats(item, type)
             }
 

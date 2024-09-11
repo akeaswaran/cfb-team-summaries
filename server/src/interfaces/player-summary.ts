@@ -24,7 +24,7 @@ interface BasePlayerStats {
     yardsPerGameRank: number
 }
 
-interface AdvancedPlayerStats {
+export interface AdvancedPlayerStats {
     totalEPA: number
     epaPerPlay: number
     epaPerGame: number
