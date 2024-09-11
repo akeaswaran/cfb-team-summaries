@@ -335,6 +335,8 @@ prepare_for_write <- function(x) {
 prepare_percentiles <- function(x) {
     tmp <- x %>%
         summarize(
+            GEI = sum(abs(wpa), na.rm = T),
+            GEI = GEI * (179.01777401608126 / dplyr::n()),
             EPAplay = mean(EPA, na.rm = TRUE),
             success = mean(epa_success, na.rm = TRUE),
             yardsplay = mean(yards_gained, na.rm = TRUE),
@@ -361,6 +363,7 @@ prepare_percentiles <- function(x) {
 
     summ_tmp <- tmp %>% summarize(
         pctile = seq(.01, .99, by = .01),
+        GEI = quantile(GEI, probs = pctile, na.rm = TRUE),
         EPAplay = quantile(EPAplay, probs = pctile, na.rm = TRUE),
         success = quantile(success, probs = pctile, na.rm = TRUE),
         yardsplay = quantile(yardsplay, probs = pctile, na.rm = TRUE),

@@ -569,6 +569,7 @@ function parsePercentiles(year: number, content: any[]): Percentile[] {
         const pctl: Percentile = {
             season: year,
             pctile: parseFloat(item.pctile),
+            gei: parseFloat(item.GEI),
             epaPerPlay: parseFloat(item.EPAplay), // EPAplay
             successRate: parseFloat(item.success), // success
             yardsPerPlay: parseFloat(item.yardsplay), // yardsplay

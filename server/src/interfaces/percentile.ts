@@ -1,6 +1,7 @@
 export interface Percentile {
     season: number
     pctile: number
+    gei: number // GEI
     epaPerPlay: number // EPAplay
     successRate: number // success
     yardsPerPlay: number // yardsplay
