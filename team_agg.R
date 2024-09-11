@@ -252,14 +252,14 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 yardsdrive_rank = rank(yardsdrive),
                 playsdrive_rank = rank(playsdrive),
 
-                play_stuffed_rank = rank(play_stuffed),
+                play_stuffed_rank = rank(-play_stuffed), # want high stuff rate on defense
                 red_zone_success_rank = rank(red_zone_success),
                 third_down_success_rank = rank(third_down_success),
                 late_down_success_rank = rank(late_down_success),
                 # available_yards_pct = rank(available_yards_pct),
 
                 # except start position
-                third_down_distance_rank = rank(-third_down_distance),
+                third_down_distance_rank = rank(-third_down_distance), # long 3rd downs are good for defense
                 start_position_rank = rank(-start_position),
                 havoc_rank = rank(-havoc),
                 explosive_rank = rank(explosive),
@@ -291,7 +291,7 @@ summarize_team_df <- function(x, ascending=FALSE, remove_cols = c()) {
                 yardsdrive_rank = rank(-yardsdrive),
                 playsdrive_rank = rank(-playsdrive),
 
-                play_stuffed_rank = rank(-play_stuffed),
+                play_stuffed_rank = rank(play_stuffed), # want low stuff rate on offense
                 red_zone_success_rank = rank(-red_zone_success),
                 third_down_success_rank = rank(-third_down_success),
                 late_down_success_rank = rank(-late_down_success),
