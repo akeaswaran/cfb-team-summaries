@@ -27,7 +27,8 @@ jobs:
       - name: Build
         uses: docker/build-push-action@v6
         with:
-          tags: ghcr.io/${{ github.repository }}:latest
+          platforms: linux/amd64,linux/arm64,linux/arm64/v8,linux
+          tags: ghcr.io/akeaswaran/${{ github.repository }}:latest
           push: true
           secrets: |
             "CFBD_API_KEY=${{ secrets.CFBD_API_KEY }}"
