@@ -541,7 +541,7 @@ adjust_epa = function(plays) {
         dplyr::relocate(team_id)
 }
 
-for (yr in 2024:2024) {
+for (yr in seasons) {
     print(glue("Starting processing for {yr} season..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
 
