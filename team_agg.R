@@ -7,7 +7,8 @@ library(janitor)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
 seasons <- 2014:max_season
-valid_fbs_teams <- cfbfastR::load_cfb_teams() %>%
+all_teams = cfbfastR::load_cfb_teams()
+valid_fbs_teams <- all_teams %>%
     filter(classification == 'fbs') #%>%
     # select(
     #     team_id,
@@ -385,21 +386,32 @@ prepare_percentiles <- function(x) {
 
 adjust_epa = function(plays) {
     # https://makennnahack.github.io/makenna-hack.github.io/publications/opp_adj_rank_project/
-    pbp.clean <- plays |>
-        filter(!is.na(EPA)) |>
-        group_by(game_id) |>
+    pbp.base = plays %>%
+        dplyr::filter(
+            !is.na(EPA)
+            & ((pass == 1) | (rush == 1))
+        ) %>%
+        dplyr::left_join(all_teams %>% dplyr::select(pos_team_id = team_id, school), by = c("pos_team" = "school")) %>%
+        dplyr::left_join(all_teams %>% dplyr::select(def_pos_team_id = team_id, school), by = c("def_pos_team" = "school")) %>%
+        dplyr::mutate(
+            dplyr::across(c(pos_team_id, def_pos_team_id), ~ as.character(.x))
+        )
+
+    pbp.clean <- pbp.base |>
         filter(
-            pos_team %in% valid_fbs_teams$school
-            & def_pos_team %in% valid_fbs_teams$school
+            (pos_team_id %in% valid_fbs_teams$team_id)
+            & (def_pos_team_id %in% valid_fbs_teams$team_id)
+            & (wp_before >= 0.1) & (wp_before <= 0.9) # remove garbage time, no vegas spread included in this WP Model
         ) |>
-        mutate(hfa = ifelse(pos_team == home, 1, 0)) |>
-        select(pos_team, def_pos_team, game = game_id, EPA, hfa) |>
-        ungroup()
+        group_by(game_id) |>
+        mutate(hfa = ifelse(pos_team == home, 1, 0)) %>%
+        ungroup() %>%
+        select(pos_team_id, pos_team, def_pos_team_id, def_pos_team, game = game_id, EPA, hfa)
 
     EPA.data <- pbp.clean |>
         select(EPA)
 
-    dummies <- model.matrix(~hfa+pos_team+def_pos_team, data = pbp.clean)
+    dummies <- model.matrix(~hfa+pos_team_id+def_pos_team_id, data = pbp.clean)
 
     data.dummies <- as.data.frame(dummies)
 
@@ -408,69 +420,82 @@ adjust_epa = function(plays) {
     x <- as.matrix(data.dummies[, -ncol(data.dummies)])
     y <- data.dummies$EPA
 
+    # glmnet::cv.glmnet(x, y)
+
     ridge_model <- glmnet::glmnet(x, y, alpha = 0, lambda = 175)
     ridge.coeff <- coef(ridge_model, s = 175)
 
     intercept <- ridge.coeff[1]
 
-    pos_team_coeffs <- ridge.coeff[grep("^pos_team", rownames(ridge.coeff)), , drop = FALSE] + intercept
-    def_pos_team_coeffs <- ridge.coeff[grep("^def_pos_team", rownames(ridge.coeff)), , drop = FALSE] + intercept
+    pos_team_coeffs <- ridge.coeff[grep("^pos_team_id", rownames(ridge.coeff)), , drop = FALSE] + intercept
+    def_pos_team_coeffs <- ridge.coeff[grep("^def_pos_team_id", rownames(ridge.coeff)), , drop = FALSE] + intercept
 
     offense <- data.frame(
-        team = rownames(pos_team_coeffs),
+        team_id = rownames(pos_team_coeffs),
         adjmodelOff = pos_team_coeffs[, 1]
     )
     rownames(offense) <- NULL
 
-    offense$team <- gsub("^pos_team", "", offense$team)
+    offense$team_id <- gsub("^pos_team_id", "", offense$team_id)
+    # offense$team_id = factor(offense$team_id, levels = levels(pbp.base$pos_team_id))
 
     defense <- data.frame(
-        team = rownames(def_pos_team_coeffs),
+        team_id = rownames(def_pos_team_coeffs),
         adjmodelDef = def_pos_team_coeffs[, 1]
     )
     rownames(defense) <- NULL
 
-    defense$team <- gsub("^def_pos_team", "", defense$team)
+    defense$team_id <- gsub("^def_pos_team_id", "", defense$team_id)
+    # defense$team_id = factor(defense$team_id, levels = levels(pbp.base$pos_team_id))
 
-    off_epa_game <- plays |> filter(!is.na(EPA)) |> group_by(game_id) |>
-        # mutate(hfa = ifelse(pos_team == home, 1, 0)) |>
-        group_by(game_id, pos_team, def_pos_team) |>
-        summarise(count = dplyr::n(), rawOffEPA = mean(EPA)) |>
-        left_join(defense, by = c("def_pos_team" = "team")) |>
+    off_epa_game <- pbp.base |>
+        group_by(game_id, pos_team_id, def_pos_team_id) |>
+        summarise(
+            count = dplyr::n(),
+            pos_team = dplyr::last(pos_team),
+            def_pos_team = dplyr::last(def_pos_team),
+            rawOffEPA = mean(EPA, na.rm = T)
+        ) |>
+        left_join(defense, by = c("def_pos_team_id" = "team_id")) |>
         mutate(adjOffEPA = rawOffEPA - adjmodelDef) |>
-        select(game = game_id, player = pos_team, off_count = count, rawOffEPA, adjOffEPA) |>
+        select(game_id, pos_team_id, pos_team, off_count = count, def_strength_faced = adjmodelDef, rawOffEPA, adjOffEPA) |>
         ungroup()
 
-    def_epa_game <- plays |> filter(!is.na(EPA)) |> group_by(game_id) |>
-        # mutate(hfa = ifelse(pos_team == home, 1, 0)) |>
-        group_by(game_id, def_pos_team, pos_team) |>
-        summarise(count = dplyr::n(), rawDefEPA = mean(EPA)) |>
-        left_join(offense, by = c("pos_team" = "team")) |>
+    def_epa_game <- pbp.base |>
+        group_by(game_id, def_pos_team_id, pos_team_id) |>
+        summarise(
+            count = dplyr::n(),
+            pos_team = dplyr::last(pos_team),
+            def_pos_team = dplyr::last(def_pos_team),
+            rawDefEPA = mean(EPA, na.rm = T)
+        ) |>
+        left_join(offense, by = c("pos_team_id" = "team_id")) |>
         mutate(adjDefEPA = rawDefEPA - adjmodelOff) |>
-        select(game = game_id, player = def_pos_team, def_count = count, rawDefEPA, adjDefEPA) |>
+        select(game_id, def_pos_team_id, def_pos_team, def_count = count, off_strength_faced = adjmodelOff, rawDefEPA, adjDefEPA) |>
         ungroup()
 
     opp.adj <- off_epa_game |>
-        left_join(def_epa_game, by = c("game", "player"))
+        left_join(def_epa_game, by = c("game_id", "pos_team_id" = "def_pos_team_id"))
 
     team.adj = opp.adj %>%
-        dplyr::group_by(player) %>%
+        dplyr::group_by(pos_team_id) %>%
         dplyr::summarise(
-            dplyr::across(dplyr::contains("EPA"), ~ mean(.x, na.rm = T))
+            pos_team = dplyr::last(pos_team),
+            team_games = dplyr::n(),
+            dplyr::across(dplyr::contains("EPA") | dplyr::contains("strength"), ~ mean(.x, na.rm = T))
         ) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(
             dplyr::across(dplyr::where(is.numeric), ~ dplyr::if_else(is.nan(.x), NA_real_, .x))
         ) %>%
-        dplyr::filter(player %in% valid_fbs_teams$school)
+        dplyr::filter(pos_team_id %in% valid_fbs_teams$team_id)
 
     # x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
     # y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
-    #
+
     # team.adj %>%
-    #     # head(25) %>%
-    #     dplyr::filter(player %in% valid_fbs_teams$school[valid_fbs_teams$conference %in% c("SEC", "Big 12", "ACC", "Big Ten")] & !is.na(adjOffEPA) & !is.na(adjDefEPA)) %>%
-    #     ggplot2::ggplot(ggplot2::aes(x = adjOffEPA, y = adjDefEPA, team = player))  +
+    #     dplyr::filter(pos_team_id %in% valid_fbs_teams$team_id[valid_fbs_teams$conference %in% c("SEC", "Big 12", "ACC", "Big Ten")] & !is.na(adjOffEPA) & !is.na(adjDefEPA)) %>%
+    #     ggplot2::ggplot(ggplot2::aes(x = adjOffEPA, y = adjDefEPA, team = pos_team))  +
     #     ggplot2::annotate(
     #         "text",
     #         x = max(team.adj$adjOffEPA, na.rm = T) - x_margin,
@@ -511,7 +536,7 @@ adjust_epa = function(plays) {
     #     ggplot2::theme_minimal() +
     #     ggplot2::labs(
     #         title = "Opponent-Adjusted EPA/Play (P4) - 12-Sept-2024",
-    #         subtitle = "Adjusted for home-field advantage and opponent quality.",
+    #         subtitle = "FBS vs FBS games only, garbage time excluded. Adjusted for home-field advantage and opponent quality.",
     #         caption = "Data from @cfbfastR. Methodology from @makennahack. Idea from @jbuddavis.",
     #         x = "Offense Adjusted EPA/Play",
     #         y = "Defense Adjusted EPA/Play"
@@ -519,26 +544,26 @@ adjust_epa = function(plays) {
     #     ggplot2::theme(
     #         plot.title = ggplot2::element_text(face = "bold")
     #     )
-    #
+
 
     team.adj %>%
         dplyr::select(
-            -dplyr::starts_with("raw")
+            -dplyr::starts_with("raw"),
+            -team_games,
         ) %>%
         dplyr::mutate(
             netAdjEPA = adjOffEPA - adjDefEPA,
 
-            # dplyr::across(dplyr::where(is.numeric), ~ dplyr::dense)
             adjOffEPA_rank = rank(-adjOffEPA),
             adjDefEPA_rank = rank(adjDefEPA),
             netAdjEPA_rank = rank(-netAdjEPA),
         ) %>%
         janitor::clean_names() %>%
         dplyr::rename(
-            pos_team = player
-        ) %>%
-        dplyr::left_join(valid_fbs_teams %>% dplyr::select(team_id, school), by = c("pos_team" = "school")) %>%
-        dplyr::relocate(team_id)
+            team_id = pos_team_id
+        )
+        # dplyr::left_join(valid_fbs_teams %>% dplyr::select(team_id, school), by = c("pos_team" = "school")) %>%
+        # dplyr::relocate(team_id)
 }
 
 for (yr in seasons) {
