@@ -318,7 +318,7 @@ clean_columns <- function (x) {
     return(x %>% rename_at(all_of(old_columns), ~ new_columns))
 }
 
-prepare_for_write <- function(x) {
+prepare_for_write <- function(x, yr) {
     tmp <- x %>%
         clean_columns() %>%
         mutate(
@@ -488,7 +488,11 @@ adjust_epa = function(plays) {
         dplyr::mutate(
             dplyr::across(dplyr::where(is.numeric), ~ dplyr::if_else(is.nan(.x), NA_real_, .x))
         ) %>%
-        dplyr::filter(pos_team_id %in% valid_fbs_teams$team_id)
+        dplyr::filter(
+            pos_team_id %in% valid_fbs_teams$team_id
+            & !is.na(adjOffEPA)
+            & !is.na(adjDefEPA)
+        )
 
     # x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
     # y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
@@ -950,17 +954,17 @@ for (yr in seasons) {
     print(glue("Generating year and team CSVs..."))
 
     team_data <- team_data %>%
-        prepare_for_write() %>%
+        prepare_for_write(yr) %>%
         dplyr::left_join(adj_EPA_df %>% dplyr::select(-team_id), by = c("pos_team"))
 
     team_qb_data <- team_qb_data %>%
-        prepare_for_write()
+        prepare_for_write(yr)
 
     team_rb_data <- team_rb_data %>%
-        prepare_for_write()
+        prepare_for_write(yr)
 
     team_wr_data <- team_wr_data %>%
-        prepare_for_write()
+        prepare_for_write(yr)
 
     print(glue("Creating folder /data/ if necessary"))
     dir.create(file.path('./data', ""), showWarnings = FALSE)
