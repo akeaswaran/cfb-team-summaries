@@ -14,16 +14,20 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v1
-      - name: Build and Push Docker Image
-        uses:  mr-smithers-excellent/docker-build-push@v5.5
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          image: ${{ github.repository }}
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          tags: latest
-  # redeploy-gop:
-  #   needs: deploy
-  #   permissions:
-  #     packages: write
-  #   uses: saiemgilani/game-on-paper-app/.github/workflows/deploy.yml@main
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          tags: ${{ github.repository }}:latest
+          push: true
+          secrets: |
+            "CFBD_API_KEY=${{ secrets.CFBD_API_KEY }}"

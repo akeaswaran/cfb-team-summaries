@@ -8,13 +8,6 @@ library(janitor)
 max_season <- cfbfastR:::most_recent_cfb_season()
 seasons <- 2014:max_season
 all_teams = cfbfastR::load_cfb_teams()
-valid_fbs_teams <- all_teams %>%
-    filter(classification == 'fbs') #%>%
-    # select(
-    #     team_id,
-    #     school,
-    #     abbreviation
-    # )
 
 write_team_csvs <- function (data, team, yr, type) {
     print(glue("Creating folder /data/{yr}/{team} if necessary"))
@@ -322,15 +315,27 @@ prepare_for_write <- function(x, yr) {
     tmp <- x %>%
         clean_columns() %>%
         mutate(
-            season = yr
+            season = yr,
+            pos_team = dplyr::case_when(
+                pos_team == "UMass" ~ "Massachusetts",
+                .default = pos_team
+            )
         ) %>%
-        left_join(valid_fbs_teams, by = c('pos_team' = 'school')) %>%
+        left_join(valid_fbs_teams, by = c('pos_team' = "school")) %>%
         select(
             team_id,
             pos_team,
             abbreviation,
             season,
-            everything()
+            dplyr::everything()
+        ) %>%
+        dplyr::mutate(
+            fbs_class = dplyr::case_when(
+                season == 2024 & !is.na(conference) & (conference %in% c("SEC", "Big 12", "ACC", "Big Ten") | pos_team == "Notre Dame") ~ "P4",
+                season == 2024 & (!is.na(conference) | (team_id %in% c(41, 113))) ~ "G6", # UCONN and UMASS
+                season <= 2023 & !is.na(conference) & (conference %in% c("SEC", "Big 12", "ACC", "Big Ten", "Pac-12") | pos_team == "Notre Dame") ~ "P5",
+                season <= 2023 & (!is.na(conference) | (team_id %in% c(349, 41, 113))) ~ "G5",
+            )
         )
     return(tmp)
 }
@@ -566,13 +571,13 @@ adjust_epa = function(plays) {
         dplyr::rename(
             team_id = pos_team_id
         )
-        # dplyr::left_join(valid_fbs_teams %>% dplyr::select(team_id, school), by = c("pos_team" = "school")) %>%
-        # dplyr::relocate(team_id)
 }
 
 for (yr in seasons) {
     print(glue("Starting processing for {yr} season..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
+
+    valid_fbs_teams <- cfbfastR::cfbd_team_info(year = yr, only_fbs = T)
 
     print(glue("Found {nrow(plays)} total plays, filtering to FBS/FBS non-garbage-time"))
 

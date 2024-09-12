@@ -2,6 +2,8 @@ export interface TeamSummary {
     teamId: number
     team: string
     season: number
+    fbsClass: string
+    conference: string
     offensive: SituationWrapper<Segment & PlaysSegment & SituationalSuccess>
     defensive: SituationWrapper<Segment & PlaysSegment & SituationalSuccess>
     differential: SituationWrapper<Segment>

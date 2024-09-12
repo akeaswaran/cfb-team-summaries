@@ -104,6 +104,8 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                 season: item.season,
                 teamId: item.team_id,
                 team: item.pos_team,
+                conference: item.conference,
+                fbsClass: item.fbs_class,
                 offensive: {
                     overall: {
                         totalPlays: item.plays_off,
