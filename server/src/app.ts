@@ -55,7 +55,7 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
     
         yardsRank: item.yards_rank,
         yardsPerPlayRank: item.yardsplay_rank,
-        yardsPerGameRank: item.yardsgame_Rank
+        yardsPerGameRank: item.yardsgame_rank
     }
     if (type === SummaryType.Passing) {
         (<PassingStats>stats).completions = item.comp;

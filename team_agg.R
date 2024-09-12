@@ -515,7 +515,7 @@ for (yr in seasons) {
         filter(
             pos_team %in% valid_fbs_teams$school
         ) %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0)) %>%
+        filter((pass == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0) & !(passer_player_name %in% c("TEAM", "Team", "#"))) %>%
         group_by(pos_team) %>%
         dplyr::mutate(
             team_games = length(unique(game_id))
@@ -572,7 +572,7 @@ for (yr in seasons) {
         filter(
             pos_team %in% valid_fbs_teams$school
         ) %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0)) %>%
+        filter((rush == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0) & !(rusher_player_name %in% c("TEAM", "Team", "#"))) %>%
         group_by(pos_team) %>%
         dplyr::mutate(
             team_games = length(unique(game_id))
@@ -616,7 +616,7 @@ for (yr in seasons) {
         filter(
             pos_team %in% valid_fbs_teams$school
         ) %>%
-        filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0)) %>%
+        filter((pass == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0) & !(receiver_player_name %in% c("TEAM", "Team", "#"))) %>%
         group_by(pos_team) %>%
         dplyr::mutate(
             team_games = length(unique(game_id))
