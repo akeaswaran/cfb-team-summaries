@@ -2,16 +2,18 @@ library(cfbfastR)
 library(dplyr)
 library(glue)
 library(stringr)
+library(glmnet)
+library(janitor)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
 seasons <- 2014:max_season
 valid_fbs_teams <- cfbfastR::load_cfb_teams() %>%
-    filter(classification == 'fbs') %>%
-    select(
-        team_id,
-        school,
-        abbreviation
-    )
+    filter(classification == 'fbs') #%>%
+    # select(
+    #     team_id,
+    #     school,
+    #     abbreviation
+    # )
 
 write_team_csvs <- function (data, team, yr, type) {
     print(glue("Creating folder /data/{yr}/{team} if necessary"))
@@ -381,7 +383,165 @@ prepare_percentiles <- function(x) {
     return(summ_tmp)
 }
 
-for (yr in seasons) {
+adjust_epa = function(plays) {
+    # https://makennnahack.github.io/makenna-hack.github.io/publications/opp_adj_rank_project/
+    pbp.clean <- plays |>
+        filter(!is.na(EPA)) |>
+        group_by(game_id) |>
+        filter(
+            pos_team %in% valid_fbs_teams$school
+            & def_pos_team %in% valid_fbs_teams$school
+        ) |>
+        mutate(hfa = ifelse(pos_team == home, 1, 0)) |>
+        select(pos_team, def_pos_team, game = game_id, EPA, hfa) |>
+        ungroup()
+
+    EPA.data <- pbp.clean |>
+        select(EPA)
+
+    dummies <- model.matrix(~hfa+pos_team+def_pos_team, data = pbp.clean)
+
+    data.dummies <- as.data.frame(dummies)
+
+    data.dummies <- cbind(data.dummies, EPA.data) |> select(-`(Intercept)`)
+
+    x <- as.matrix(data.dummies[, -ncol(data.dummies)])
+    y <- data.dummies$EPA
+
+    ridge_model <- glmnet::glmnet(x, y, alpha = 0, lambda = 175)
+    ridge.coeff <- coef(ridge_model, s = 175)
+
+    intercept <- ridge.coeff[1]
+
+    pos_team_coeffs <- ridge.coeff[grep("^pos_team", rownames(ridge.coeff)), , drop = FALSE] + intercept
+    def_pos_team_coeffs <- ridge.coeff[grep("^def_pos_team", rownames(ridge.coeff)), , drop = FALSE] + intercept
+
+    offense <- data.frame(
+        team = rownames(pos_team_coeffs),
+        adjmodelOff = pos_team_coeffs[, 1]
+    )
+    rownames(offense) <- NULL
+
+    offense$team <- gsub("^pos_team", "", offense$team)
+
+    defense <- data.frame(
+        team = rownames(def_pos_team_coeffs),
+        adjmodelDef = def_pos_team_coeffs[, 1]
+    )
+    rownames(defense) <- NULL
+
+    defense$team <- gsub("^def_pos_team", "", defense$team)
+
+    off_epa_game <- plays |> filter(!is.na(EPA)) |> group_by(game_id) |>
+        # mutate(hfa = ifelse(pos_team == home, 1, 0)) |>
+        group_by(game_id, pos_team, def_pos_team) |>
+        summarise(count = dplyr::n(), rawOffEPA = mean(EPA)) |>
+        left_join(defense, by = c("def_pos_team" = "team")) |>
+        mutate(adjOffEPA = rawOffEPA - adjmodelDef) |>
+        select(game = game_id, player = pos_team, off_count = count, rawOffEPA, adjOffEPA) |>
+        ungroup()
+
+    def_epa_game <- plays |> filter(!is.na(EPA)) |> group_by(game_id) |>
+        # mutate(hfa = ifelse(pos_team == home, 1, 0)) |>
+        group_by(game_id, def_pos_team, pos_team) |>
+        summarise(count = dplyr::n(), rawDefEPA = mean(EPA)) |>
+        left_join(offense, by = c("pos_team" = "team")) |>
+        mutate(adjDefEPA = rawDefEPA - adjmodelOff) |>
+        select(game = game_id, player = def_pos_team, def_count = count, rawDefEPA, adjDefEPA) |>
+        ungroup()
+
+    opp.adj <- off_epa_game |>
+        left_join(def_epa_game, by = c("game", "player"))
+
+    team.adj = opp.adj %>%
+        dplyr::group_by(player) %>%
+        dplyr::summarise(
+            dplyr::across(dplyr::contains("EPA"), ~ mean(.x, na.rm = T))
+        ) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(
+            dplyr::across(dplyr::where(is.numeric), ~ dplyr::if_else(is.nan(.x), NA_real_, .x))
+        ) %>%
+        dplyr::filter(player %in% valid_fbs_teams$school)
+
+    # x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
+    # y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
+    #
+    # team.adj %>%
+    #     # head(25) %>%
+    #     dplyr::filter(player %in% valid_fbs_teams$school[valid_fbs_teams$conference %in% c("SEC", "Big 12", "ACC", "Big Ten")] & !is.na(adjOffEPA) & !is.na(adjDefEPA)) %>%
+    #     ggplot2::ggplot(ggplot2::aes(x = adjOffEPA, y = adjDefEPA, team = player))  +
+    #     ggplot2::annotate(
+    #         "text",
+    #         x = max(team.adj$adjOffEPA, na.rm = T) - x_margin,
+    #         y = max(team.adj$adjDefEPA, na.rm = T) - y_margin,
+    #         size = 4,
+    #         label = "Good Offense, Bad Defense",
+    #         color = "gray50"
+    #     ) +
+    #     ggplot2::annotate(
+    #         "text",
+    #         x = min(team.adj$adjOffEPA, na.rm = T) + x_margin,
+    #         y = min(team.adj$adjDefEPA, na.rm = T) + y_margin,
+    #         size = 4,
+    #         label = "Bad Offense, Good Defense",
+    #         color = "gray50"
+    #     ) +
+    #     ggplot2::annotate(
+    #         "text",
+    #         x = max(team.adj$adjOffEPA, na.rm = T) - x_margin,
+    #         y = min(team.adj$adjDefEPA, na.rm = T) + y_margin,
+    #         size = 4,
+    #         label = "Good Offense, Good Defense",
+    #         color = "gray50"
+    #     ) +
+    #     ggplot2::annotate(
+    #         "text",
+    #         x = min(team.adj$adjOffEPA, na.rm = T) + x_margin,
+    #         y = max(team.adj$adjDefEPA, na.rm = T) - y_margin,
+    #         size = 4,
+    #         label = "Bad Offense, Bad Defense",
+    #         color = "gray50"
+    #     ) +
+    #     ggplot2::geom_vline(xintercept = mean(team.adj$adjOffEPA, na.rm = T), linetype = "dashed", color = "red") +
+    #     ggplot2::geom_hline(yintercept = mean(team.adj$adjDefEPA, na.rm = T), linetype = "dashed", color = "red") +
+    #     cfbplotR::geom_cfb_logos(width = 0.025) +
+    #     # ggplot2::geom_point() +
+    #     ggplot2::scale_y_reverse() +
+    #     ggplot2::theme_minimal() +
+    #     ggplot2::labs(
+    #         title = "Opponent-Adjusted EPA/Play (P4) - 12-Sept-2024",
+    #         subtitle = "Adjusted for home-field advantage and opponent quality.",
+    #         caption = "Data from @cfbfastR. Methodology from @makennahack. Idea from @jbuddavis.",
+    #         x = "Offense Adjusted EPA/Play",
+    #         y = "Defense Adjusted EPA/Play"
+    #     ) +
+    #     ggplot2::theme(
+    #         plot.title = ggplot2::element_text(face = "bold")
+    #     )
+    #
+
+    team.adj %>%
+        dplyr::select(
+            -dplyr::starts_with("raw")
+        ) %>%
+        dplyr::mutate(
+            netAdjEPA = adjOffEPA - adjDefEPA,
+
+            # dplyr::across(dplyr::where(is.numeric), ~ dplyr::dense)
+            adjOffEPA_rank = rank(-adjOffEPA),
+            adjDefEPA_rank = rank(adjDefEPA),
+            netAdjEPA_rank = rank(-netAdjEPA),
+        ) %>%
+        janitor::clean_names() %>%
+        dplyr::rename(
+            pos_team = player
+        ) %>%
+        dplyr::left_join(valid_fbs_teams %>% dplyr::select(team_id, school), by = c("pos_team" = "school")) %>%
+        dplyr::relocate(team_id)
+}
+
+for (yr in 2024:2024) {
     print(glue("Starting processing for {yr} season..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
 
@@ -546,7 +706,7 @@ for (yr in seasons) {
             detmergame_rank = rank(-detmergame)
         ) %>%
         dplyr::select(
-            pos_team, 
+            pos_team,
             passer_player_name,
             TEPA_rank,
             EPAgame_rank,
@@ -597,7 +757,7 @@ for (yr in seasons) {
             yardsgame_rank = rank(-yardsgame),
         ) %>%
         dplyr::select(
-            pos_team, 
+            pos_team,
             rusher_player_name,
             TEPA_rank,
             EPAgame_rank,
@@ -642,7 +802,7 @@ for (yr in seasons) {
             yardsgame_rank = rank(-yardsgame)
         ) %>%
         dplyr::select(
-            pos_team, 
+            pos_team,
             receiver_player_name,
             TEPA_rank,
             EPAgame_rank,
@@ -657,7 +817,7 @@ for (yr in seasons) {
 
     team_wr_data = team_wr_data %>%
         dplyr::left_join(team_wr_ranks, by = c("pos_team", "receiver_player_name"))
-    
+
 
     team_off_pass_data <- plays %>%
         filter(
@@ -759,10 +919,14 @@ for (yr in seasons) {
     team_data <- left_join(team_data, team_pass_data, by = c("pos_team" = "pos_team"), suffix = c("","_pass"))
     team_data <- left_join(team_data, team_rush_data, by = c("pos_team" = "pos_team"), suffix = c("","_rush"))
 
+    print(glue::glue("running ridge regression adjustments...."))
+    adj_EPA_df = adjust_epa(plays)
+
     print(glue("Generating year and team CSVs..."))
 
     team_data <- team_data %>%
-        prepare_for_write()
+        prepare_for_write() %>%
+        dplyr::left_join(adj_EPA_df %>% dplyr::select(-team_id), by = c("pos_team"))
 
     team_qb_data <- team_qb_data %>%
         prepare_for_write()

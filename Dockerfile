@@ -6,7 +6,8 @@ WORKDIR /src
 RUN install2.r --error \
     stringr \
     glue \
-    devtools
+    devtools \
+    glmnet
 
 RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
 

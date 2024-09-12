@@ -32,6 +32,7 @@ export interface SituationWrapper<T> {
 export interface Segment {
     totalEPA: number
     epaPerPlay: number
+    adjEpaPerPlay: number
     epaPerDrive: number
     epaPerGame: number
     successRate: number
@@ -42,6 +43,7 @@ export interface Segment {
 
     totalEPARank: number
     epaPerPlayRank: number
+    adjEpaPerPlayRank: number
     epaPerDriveRank: number
     epaPerGameRank: number
     successRateRank: number

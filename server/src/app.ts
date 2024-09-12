@@ -100,7 +100,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
     const result: Summary[] = [];
     if (type === SummaryType.Overall) {
         for (const item of content) {
-            const team: TeamSummary = {
+            let team: any = {
                 season: item.season,
                 teamId: item.team_id,
                 team: item.pos_team,
@@ -110,6 +110,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGame: item.playsgame_off,
                         totalEPA: item.TEPA_off,
                         epaPerPlay: item.EPAplay_off,
+                        adjEpaPerPlay: item.adj_off_epa,
                         epaPerGame: item.EPAgame_off,
                         successRate: item.success_off,
                         startingFP: item.start_position_off,
@@ -121,6 +122,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGameRank: item.playsgame_off_rank,
                         totalEPARank: item.TEPA_off_rank,
                         epaPerPlayRank: item.EPAplay_off_rank,
+                        adjEpaPerPlayRank: item.adj_off_epa_rank,
                         epaPerGameRank: item.EPAgame_off_rank,
                         successRateRank: item.success_off_rank,
                         startingFPRank: item.start_position_off_rank,
@@ -170,6 +172,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGame: item.playsgame_off_pass,
                         totalEPA: item.TEPA_off_pass,
                         epaPerPlay: item.EPAplay_off_pass,
+                        adjEpaPerPlay: item.adj_off_epa_pass,
                         epaPerGame: item.EPAgame_off_pass,
                         successRate: item.success_off_pass,
                         startingFP: item.start_position_off_pass,
@@ -177,6 +180,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGameRank: item.playsgame_off_pass_rank,
                         totalEPARank: item.TEPA_off_pass_rank,
                         epaPerPlayRank: item.EPAplay_off_pass_rank,
+                        adjEpaPerPlayRank: item.adj_off_epa_pass_rank,
                         epaPerGameRank: item.EPAgame_off_pass_rank,
                         successRateRank: item.success_off_pass_rank,
                         startingFPRank: item.start_position_off_pass_rank,
@@ -223,6 +227,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGame: item.playsgame_off_rush,
                         totalEPA: item.TEPA_off_rush,
                         epaPerPlay: item.EPAplay_off_rush,
+                        adjEpaPerPlay: item.adj_off_epa_rush,
                         epaPerGame: item.EPAgame_off_rush,
                         successRate: item.success_off_rush,
                         startingFP: item.start_position_off_rush,
@@ -230,6 +235,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGameRank: item.playsgame_off_rush_rank,
                         totalEPARank: item.TEPA_off_rush_rank,
                         epaPerPlayRank: item.EPAplay_off_rush_rank,
+                        adjEpaPerPlayRank: item.adj_off_epa_rush_rank,
                         epaPerGameRank: item.EPAgame_off_rush_rank,
                         successRateRank: item.success_off_rush_rank,
                         startingFPRank: item.start_position_off_rush_rank,
@@ -277,6 +283,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGame: item.playsgame_def,
                         totalEPA: item.TEPA_def,
                         epaPerPlay: item.EPAplay_def,
+                        adjEpaPerPlay: item.adj_def_epa,
                         epaPerGame: item.EPAgame_def,
                         successRate: item.success_def,
                         startingFP: item.start_position_def,
@@ -284,6 +291,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGameRank: item.playsgame_def_rank,
                         totalEPARank: item.TEPA_def_rank,
                         epaPerPlayRank: item.EPAplay_def_rank,
+                        adjEpaPerPlayRank: item.adj_def_epa_rank,
                         epaPerGameRank: item.EPAgame_def_rank,
                         successRateRank: item.success_def_rank,
                         startingFPRank: item.start_position_def_rank,
@@ -337,6 +345,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGame: item.playsgame_def_pass,
                         totalEPA: item.TEPA_def_pass,
                         epaPerPlay: item.EPAplay_def_pass,
+                        adjEpaPerPlay: item.adj_def_epa_pass,
                         epaPerGame: item.EPAgame_def_pass,
                         successRate: item.success_def_pass,
                         startingFP: item.start_position_def_pass,
@@ -344,6 +353,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGameRank: item.playsgame_def_pass_rank,
                         totalEPARank: item.TEPA_def_pass_rank,
                         epaPerPlayRank: item.EPAplay_def_pass_rank,
+                        adjEpaPerPlayRank: item.adj_def_epa_pass_rank,
                         epaPerGameRank: item.EPAgame_def_pass_rank,
                         successRateRank: item.success_def_pass_rank,
                         startingFPRank: item.start_position_def_pass_rank,
@@ -390,6 +400,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGame: item.playsgame_def_rush,
                         totalEPA: item.TEPA_def_rush,
                         epaPerPlay: item.EPAplay_def_rush,
+                        adjEpaPerPlay: item.adj_def_epa_rush_rank,
                         epaPerGame: item.EPAgame_def_rush,
                         successRate: item.success_def_rush,
                         startingFP: item.start_position_def_rush,
@@ -397,6 +408,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         playsPerGameRank: item.playsgame_def_rush_rank,
                         totalEPARank: item.TEPA_def_rush_rank,
                         epaPerPlayRank: item.EPAplay_def_rush_rank,
+                        adjEpaPerPlayRank: item.adj_def_epa_rush_rank,
                         epaPerGameRank: item.EPAgame_def_rush_rank,
                         successRateRank: item.success_def_rush_rank,
                         startingFPRank: item.start_position_def_rush_rank,
@@ -443,12 +455,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                     overall: {
                         totalEPA: item.TEPA_margin,
                         epaPerPlay: item.EPAplay_margin,
+                        adjEpaPerPlay: item.net_adj_EPA,
                         epaPerGame: item.EPAgame_margin,
                         successRate: item.success_margin,
                         startingFP: item.start_position_margin,
 
                         totalEPARank: item.TEPA_margin_rank,
                         epaPerPlayRank: item.EPAplay_margin_rank,
+                        adjEpaPerPlayRank: item.net_adj_EPA_rank,
                         epaPerGameRank: item.EPAgame_margin_rank,
                         successRateRank: item.success_margin_rank,
                         startingFPRank: item.start_position_margin_rank,
@@ -475,12 +489,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                     passing: {
                         totalEPA: item.TEPA_margin_pass,
                         epaPerPlay: item.EPAplay_margin_pass,
+                        adjEpaPerPlay: item.net_adj_EPA_pass,
                         epaPerGame: item.EPAgame_margin_pass,
                         successRate: item.success_margin_pass,
                         startingFP: item.start_position_margin_pass,
                         
                         totalEPARank: item.TEPA_margin_pass_rank,
                         epaPerPlayRank: item.EPAplay_margin_pass_rank,
+                        adjEpaPerPlayRank: item.net_adj_EPA_rank,
                         epaPerGameRank: item.EPAgame_margin_pass_rank,
                         successRateRank: item.success_margin_pass_rank,
                         startingFPRank: item.start_position_margin_pass_rank,
@@ -499,12 +515,14 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                     rushing: {
                         totalEPA: item.TEPA_margin_rush,
                         epaPerPlay: item.EPAplay_margin_rush,
+                        adjEpaPerPlay: item.net_adj_EPA_rush,
                         epaPerGame: item.EPAgame_margin_rush,
                         successRate: item.success_margin_rush,
                         startingFP: item.start_position_margin_rush,
                         
                         totalEPARank: item.TEPA_margin_rush_rank,
                         epaPerPlayRank: item.EPAplay_margin_rush_rank,
+                        adjEpaPerPlayRank: item.net_adj_EPA_rank,
                         epaPerGameRank: item.EPAgame_margin_rush_rank,
                         successRateRank: item.success_margin_rush_rank,
                         startingFPRank: item.start_position_margin_rush_rank,
@@ -522,7 +540,20 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                     }
                 }
             };
-            result.push(team);
+            for (const key of Object.keys(team)) {
+                let subDict = team[key]
+                if (typeof subDict === 'object' && !Array.isArray(subDict) && subDict !== null) {
+                    for (const subKey of Object.keys(subDict)) {
+                        let subSubDict = team[key][subKey]
+                        if (typeof subSubDict === 'object' && !Array.isArray(subSubDict) && subSubDict !== null) {
+                            Object.keys(subSubDict).forEach(subSubKey => {
+                                team[key][subKey][subSubKey] = (team[key][subKey][subSubKey] == "NA") ? null : team[key][subKey][subSubKey]; //parseFloat(team[key][subKey][subSubKey]) // maintain compat
+                            })
+                        }
+                    }
+                }
+            }
+            result.push(<Summary>team);
         }
     } else {
         for (const item of content) {
