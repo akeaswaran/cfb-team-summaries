@@ -1001,20 +1001,20 @@ for (yr in seasons) {
     print(glue("Writing team CSVs to folder /data/{yr}"))
     team_data %>%
         group_by(team_id) %>%
-        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'overall'))
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'overall'), .keep = T)
 
     print(glue("Writing player CSVs to folder /data/{yr}"))
     team_qb_data %>%
         group_by(team_id) %>%
-        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'passing'))
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'passing'), .keep = T)
 
     team_rb_data %>%
         group_by(team_id) %>%
-        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'rushing'))
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'rushing'), .keep = T)
 
     team_wr_data %>%
         group_by(team_id) %>%
-        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'receiving'))
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'receiving'), .keep = T)
 }
 
 
