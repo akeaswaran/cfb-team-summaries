@@ -312,19 +312,16 @@ clean_columns <- function (x) {
 }
 
 prepare_for_write <- function(x, yr) {
+    # browser()
     tmp <- x %>%
         clean_columns() %>%
-        mutate(
-            season = yr,
-            pos_team = dplyr::case_when(
-                pos_team == "UMass" ~ "Massachusetts",
-                .default = pos_team
-            )
+        dplyr::mutate(
+            season = yr
         ) %>%
-        left_join(valid_fbs_teams, by = c('pos_team' = "school")) %>%
+        left_join(valid_fbs_teams, by = c('pos_team_id' = "team_id")) %>%
         select(
-            team_id,
-            pos_team,
+            team_id = pos_team_id,
+            pos_team = school,
             abbreviation,
             season,
             dplyr::everything()
@@ -332,9 +329,9 @@ prepare_for_write <- function(x, yr) {
         dplyr::mutate(
             fbs_class = dplyr::case_when(
                 season == 2024 & !is.na(conference) & (conference %in% c("SEC", "Big 12", "ACC", "Big Ten") | pos_team == "Notre Dame") ~ "P4",
-                season == 2024 & (!is.na(conference) | (team_id %in% c(41, 113))) ~ "G6", # UCONN and UMASS
+                season == 2024 & (!is.na(conference) | (team_id %in% c("41", "113"))) ~ "G6", # UCONN and UMASS
                 season <= 2023 & !is.na(conference) & (conference %in% c("SEC", "Big 12", "ACC", "Big Ten", "Pac-12") | pos_team == "Notre Dame") ~ "P5",
-                season <= 2023 & (!is.na(conference) | (team_id %in% c(349, 41, 113))) ~ "G5",
+                season <= 2023 & (!is.na(conference) | (team_id %in% c("349", "41", "113"))) ~ "G5",
             )
         )
     return(tmp)
@@ -350,7 +347,7 @@ prepare_percentiles <- function(x) {
             yardsplay = mean(yards_gained, na.rm = TRUE),
             dropbacks = (sum(pass, na.rm = TRUE)),
             rushes = (sum(rush, na.rm = TRUE)),
-            EPAdropback = case_when(
+            EPAdropback = dplyr::case_when(
                 dropbacks == 0 ~ 0,
                 TRUE ~ (sum(pos_EPA_pass, na.rm = TRUE) / dropbacks)
             ),
@@ -396,8 +393,6 @@ adjust_epa = function(plays) {
             !is.na(EPA)
             & ((pass == 1) | (rush == 1))
         ) %>%
-        dplyr::left_join(all_teams %>% dplyr::select(pos_team_id = team_id, school), by = c("pos_team" = "school")) %>%
-        dplyr::left_join(all_teams %>% dplyr::select(def_pos_team_id = team_id, school), by = c("def_pos_team" = "school")) %>%
         dplyr::mutate(
             dplyr::across(c(pos_team_id, def_pos_team_id), ~ as.character(.x))
         )
@@ -575,18 +570,37 @@ adjust_epa = function(plays) {
 
 for (yr in seasons) {
     print(glue("Starting processing for {yr} season..."))
+    print(glue("Downloading plays..."))
     plays <- cfbfastR::load_cfb_pbp(seasons = c(yr))
+    print(glue("Downloading schedule..."))
+    schedules <- cfbfastR::load_cfb_schedules(seasons = c(yr))
 
+    print(glue("Downloading teams..."))
     valid_fbs_teams <- cfbfastR::cfbd_team_info(year = yr, only_fbs = T)
+    valid_fbs_teams = valid_fbs_teams %>%
+        dplyr::mutate(
+            team_id = as.character(team_id)
+        )
 
-    print(glue("Found {nrow(plays)} total plays, filtering to FBS/FBS non-garbage-time"))
+    print(glue("Found {nrow(plays)} total plays, filtering to FBS/FBS"))
 
     plays <- plays %>%
         filter(
             (pass == 1) | (rush == 1),
             # ((wp_before >= 0.1) & (wp_before <= 0.9))
         ) %>%
+        dplyr::left_join(schedules %>% dplyr::select(game_id, home_id, away_id)) %>%
         mutate(
+            pos_team_id = dplyr::case_when(
+                pos_team == home ~ home_id,
+                pos_team == away ~ away_id,
+            ),
+            pos_team_id = as.character(pos_team_id),
+            def_pos_team_id = dplyr::case_when(
+                pos_team == home ~ away_id,
+                pos_team == away ~ home_id,
+            ),
+            def_pos_team_id = as.character(def_pos_team_id),
             pos_EPA_pass = case_when(
                 pos_team == home ~ home_EPA_pass,
                 pos_team == away ~ away_EPA_pass,
@@ -667,34 +681,34 @@ for (yr in seasons) {
 
     team_off_plays <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success))
 
     team_off_pctls <- team_off_plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school,
-            def_pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
+            & def_pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         group_by(game_id, pos_team) %>%
         prepare_percentiles()
 
     team_off_data <- team_off_plays %>%
-        group_by(pos_team) %>%
+        group_by(pos_team_id) %>%
         summarize_team_df(ascending = FALSE)
 
     team_off_drives_data <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(drive_id)) %>%
-        group_by(pos_team, drive_id) %>%
+        group_by(pos_team_id, drive_id) %>%
         summarize(
             total_available_yards = first(drive_start_yards_to_goal),
             total_gained_yards = last(drive_yards),
         ) %>%
         ungroup() %>%
-        group_by(pos_team) %>%
+        group_by(pos_team_id) %>%
         summarize(
             total_available_yards = sum(total_available_yards),
             total_gained_yards = sum(total_gained_yards),
@@ -707,15 +721,15 @@ for (yr in seasons) {
 
     team_qb_data <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter((pass == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(passer_player_name) & (nchar(trim(passer_player_name)) > 0) & !(passer_player_name %in% c("TEAM", "Team", "#"))) %>%
-        group_by(pos_team) %>%
+        group_by(pos_team_id) %>%
         dplyr::mutate(
             team_games = length(unique(game_id))
         ) %>%
         dplyr::ungroup() %>%
-        group_by(pos_team, passer_player_name) %>%
+        group_by(pos_team_id, passer_player_name) %>%
         summarize_passer_df() %>%
         ungroup()
 
@@ -740,7 +754,7 @@ for (yr in seasons) {
             detmergame_rank = rank(-detmergame)
         ) %>%
         dplyr::select(
-            pos_team,
+            pos_team_id,
             passer_player_name,
             TEPA_rank,
             EPAgame_rank,
@@ -759,20 +773,20 @@ for (yr in seasons) {
         )
 
     team_qb_data = team_qb_data %>%
-        dplyr::left_join(team_qb_ranks, by = c("pos_team", "passer_player_name"))
+        dplyr::left_join(team_qb_ranks, by = c("pos_team_id", "passer_player_name"))
 
 
     team_rb_data <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter((rush == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(rusher_player_name) & (nchar(trim(rusher_player_name)) > 0) & !(rusher_player_name %in% c("TEAM", "Team", "#"))) %>%
-        group_by(pos_team) %>%
+        group_by(pos_team_id) %>%
         dplyr::mutate(
             team_games = length(unique(game_id))
         ) %>%
         dplyr::ungroup() %>%
-        group_by(pos_team, rusher_player_name) %>%
+        group_by(pos_team_id, rusher_player_name) %>%
         summarize_rusher_df() %>%
         ungroup()
 
@@ -791,7 +805,7 @@ for (yr in seasons) {
             yardsgame_rank = rank(-yardsgame),
         ) %>%
         dplyr::select(
-            pos_team,
+            pos_team_id,
             rusher_player_name,
             TEPA_rank,
             EPAgame_rank,
@@ -804,19 +818,19 @@ for (yr in seasons) {
         )
 
     team_rb_data = team_rb_data %>%
-        dplyr::left_join(team_rb_ranks, by = c("pos_team", "rusher_player_name"))
+        dplyr::left_join(team_rb_ranks, by = c("pos_team_id", "rusher_player_name"))
 
     team_wr_data <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter((pass == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0) & !(receiver_player_name %in% c("TEAM", "Team", "#"))) %>%
-        group_by(pos_team) %>%
+        group_by(pos_team_id) %>%
         dplyr::mutate(
             team_games = length(unique(game_id))
         ) %>%
         dplyr::ungroup() %>%
-        group_by(pos_team, receiver_player_name) %>%
+        group_by(pos_team_id, receiver_player_name) %>%
         summarize_receiver_df() %>%
         ungroup()
 
@@ -836,7 +850,7 @@ for (yr in seasons) {
             yardsgame_rank = rank(-yardsgame)
         ) %>%
         dplyr::select(
-            pos_team,
+            pos_team_id,
             receiver_player_name,
             TEPA_rank,
             EPAgame_rank,
@@ -850,25 +864,25 @@ for (yr in seasons) {
         )
 
     team_wr_data = team_wr_data %>%
-        dplyr::left_join(team_wr_ranks, by = c("pos_team", "receiver_player_name"))
+        dplyr::left_join(team_wr_ranks, by = c("pos_team_id", "receiver_player_name"))
 
 
     team_off_pass_data <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
-        group_by(pos_team) %>%
+        group_by(pos_team_id) %>%
         summarize_team_df(remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
     team_off_rush_data <- plays %>%
         filter(
-            pos_team %in% valid_fbs_teams$school
+            pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
-        group_by(pos_team) %>%
+        group_by(pos_team_id) %>%
         summarize_team_df(remove_cols = c(
             'start_position', 'start_position_rank'
         ))
@@ -877,24 +891,24 @@ for (yr in seasons) {
 
     team_def_data <- plays %>%
         filter(
-            def_pos_team %in% valid_fbs_teams$school
+            def_pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success)) %>%
-        group_by(def_pos_team) %>%
+        group_by(def_pos_team_id) %>%
         summarize_team_df(ascending = TRUE)
 
     team_def_drives_data <- plays %>%
         filter(
-            def_pos_team %in% valid_fbs_teams$school
+            def_pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(drive_id)) %>%
-        group_by(def_pos_team, drive_id) %>%
+        group_by(def_pos_team_id, drive_id) %>%
         summarize(
             total_available_yards = first(drive_start_yards_to_goal),
             total_gained_yards = last(drive_yards),
         ) %>%
         ungroup() %>%
-        group_by(def_pos_team) %>%
+        group_by(def_pos_team_id) %>%
         summarize(
             total_available_yards = sum(total_available_yards),
             total_gained_yards = sum(total_gained_yards),
@@ -907,30 +921,30 @@ for (yr in seasons) {
 
     team_def_pass_data <- plays %>%
         filter(
-            def_pos_team %in% valid_fbs_teams$school
+            def_pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
-        group_by(def_pos_team) %>%
+        group_by(def_pos_team_id) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
     team_def_rush_data <- plays %>%
         filter(
-            def_pos_team %in% valid_fbs_teams$school
+            def_pos_team_id %in% valid_fbs_teams$team_id
         ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
-        group_by(def_pos_team) %>%
+        group_by(def_pos_team_id) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
             'start_position', 'start_position_rank'
         ))
 
     print(glue("Merging offensive and defensive data, calculating full season ranks"))
 
-    team_overall_data <- left_join(team_off_data, team_def_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
-    team_drives_data <- left_join(team_off_drives_data, team_def_drives_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
-    team_pass_data <- left_join(team_off_pass_data, team_def_pass_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
-    team_rush_data <- left_join(team_off_rush_data, team_def_rush_data, by = c("pos_team" = "def_pos_team"), suffix = c("_off","_def"))
+    team_overall_data <- left_join(team_off_data, team_def_data, by = c("pos_team_id" = "def_pos_team_id"), suffix = c("_off","_def"))
+    team_drives_data <- left_join(team_off_drives_data, team_def_drives_data, by = c("pos_team_id" = "def_pos_team_id"), suffix = c("_off","_def"))
+    team_pass_data <- left_join(team_off_pass_data, team_def_pass_data, by = c("pos_team_id" = "def_pos_team_id"), suffix = c("_off","_def"))
+    team_rush_data <- left_join(team_off_rush_data, team_def_rush_data, by = c("pos_team_id" = "def_pos_team_id"), suffix = c("_off","_def"))
 
     team_overall_data <- team_overall_data %>%
         mutate_summary_df()
@@ -949,9 +963,9 @@ for (yr in seasons) {
     team_rush_data <- team_rush_data %>%
         mutate_summary_df()
 
-    team_data <- left_join(team_overall_data, team_drives_data, by = c("pos_team" = "pos_team"), suffix = c("","_drive"))
-    team_data <- left_join(team_data, team_pass_data, by = c("pos_team" = "pos_team"), suffix = c("","_pass"))
-    team_data <- left_join(team_data, team_rush_data, by = c("pos_team" = "pos_team"), suffix = c("","_rush"))
+    team_data <- left_join(team_overall_data, team_drives_data, by = c("pos_team_id" = "pos_team_id"), suffix = c("","_drive"))
+    team_data <- left_join(team_data, team_pass_data, by = c("pos_team_id" = "pos_team_id"), suffix = c("","_pass"))
+    team_data <- left_join(team_data, team_rush_data, by = c("pos_team_id" = "pos_team_id"), suffix = c("","_rush"))
 
     print(glue::glue("running ridge regression adjustments...."))
     adj_EPA_df = adjust_epa(plays)
@@ -960,7 +974,7 @@ for (yr in seasons) {
 
     team_data <- team_data %>%
         prepare_for_write(yr) %>%
-        dplyr::left_join(adj_EPA_df %>% dplyr::select(-team_id), by = c("pos_team"))
+        dplyr::left_join(adj_EPA_df %>% dplyr::select(-pos_team), by = c("team_id"))
 
     team_qb_data <- team_qb_data %>%
         prepare_for_write(yr)
@@ -986,21 +1000,21 @@ for (yr in seasons) {
 
     print(glue("Writing team CSVs to folder /data/{yr}"))
     team_data %>%
-        group_by(abbreviation) %>%
-        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'overall'))
+        group_by(team_id) %>%
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'overall'))
 
     print(glue("Writing player CSVs to folder /data/{yr}"))
     team_qb_data %>%
-        group_by(abbreviation) %>%
-        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'passing'))
+        group_by(team_id) %>%
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'passing'))
 
     team_rb_data %>%
-        group_by(abbreviation) %>%
-        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'rushing'))
+        group_by(team_id) %>%
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'rushing'))
 
     team_wr_data %>%
-        group_by(abbreviation) %>%
-        group_walk(~ write_team_csvs(.x, .y$abbreviation, yr, 'receiving'))
+        group_by(team_id) %>%
+        group_walk(~ write_team_csvs(.x, .y$team_id, yr, 'receiving'))
 }
 
 
