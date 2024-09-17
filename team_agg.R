@@ -404,7 +404,11 @@ adjust_epa = function(plays) {
             & (wp_before >= 0.1) & (wp_before <= 0.9) # remove garbage time, no vegas spread included in this WP Model
         ) |>
         group_by(game_id) |>
-        mutate(hfa = ifelse(pos_team == home, 1, 0)) %>%
+        mutate(hfa = dplyr::case_when(
+            neutral_site ~ 0,
+            pos_team == home ~ 1,
+            .default = -1
+        )) %>%
         ungroup() %>%
         select(pos_team_id, pos_team, def_pos_team_id, def_pos_team, game = game_id, EPA, hfa)
 
@@ -420,10 +424,11 @@ adjust_epa = function(plays) {
     x <- as.matrix(data.dummies[, -ncol(data.dummies)])
     y <- data.dummies$EPA
 
-    # glmnet::cv.glmnet(x, y)
+    cv = glmnet::cv.glmnet(x, y, lambda = c(75,100,125,150,175,200,225,250,275,300,325))
+    target_lambda = cv$lambda[[1]]
 
-    ridge_model <- glmnet::glmnet(x, y, alpha = 0, lambda = 175)
-    ridge.coeff <- coef(ridge_model, s = 175)
+    ridge_model <- glmnet::glmnet(x, y, alpha = 0, lambda = target_lambda, intercept = T)
+    ridge.coeff <- coef(ridge_model, s = target_lambda)
 
     intercept <- ridge.coeff[1]
 
@@ -496,7 +501,7 @@ adjust_epa = function(plays) {
 
     # x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
     # y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
-
+    #
     # team.adj %>%
     #     dplyr::filter(pos_team_id %in% valid_fbs_teams$team_id[valid_fbs_teams$conference %in% c("SEC", "Big 12", "ACC", "Big Ten")] & !is.na(adjOffEPA) & !is.na(adjDefEPA)) %>%
     #     ggplot2::ggplot(ggplot2::aes(x = adjOffEPA, y = adjDefEPA, team = pos_team))  +
@@ -589,7 +594,7 @@ for (yr in seasons) {
             (pass == 1) | (rush == 1),
             # ((wp_before >= 0.1) & (wp_before <= 0.9))
         ) %>%
-        dplyr::left_join(schedules %>% dplyr::select(game_id, home_id, away_id)) %>%
+        dplyr::left_join(schedules %>% dplyr::select(game_id, neutral_site, home_id, away_id), by = "game_id") %>%
         mutate(
             pos_team_id = dplyr::case_when(
                 pos_team == home ~ home_id,
