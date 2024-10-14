@@ -487,6 +487,7 @@ adjust_epa = function(plays) {
         dplyr::summarise(
             pos_team = dplyr::last(pos_team),
             team_games = dplyr::n(),
+            valid_games = sum(!is.na(adjOffEPA) & !is.na(adjDefEPA), na.rm = T),
             dplyr::across(dplyr::contains("EPA") | dplyr::contains("strength"), ~ mean(.x, na.rm = T))
         ) %>%
         dplyr::ungroup() %>%
@@ -497,11 +498,12 @@ adjust_epa = function(plays) {
             pos_team_id %in% valid_fbs_teams$team_id
             & !is.na(adjOffEPA)
             & !is.na(adjDefEPA)
+            & valid_games >= 2
         )
 
-    # x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
-    # y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
-    #
+    x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
+    y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
+
     # team.adj %>%
     #     dplyr::filter(pos_team_id %in% valid_fbs_teams$team_id[valid_fbs_teams$conference %in% c("SEC", "Big 12", "ACC", "Big Ten")] & !is.na(adjOffEPA) & !is.na(adjDefEPA)) %>%
     #     ggplot2::ggplot(ggplot2::aes(x = adjOffEPA, y = adjDefEPA, team = pos_team))  +
@@ -591,7 +593,8 @@ for (yr in seasons) {
 
     plays <- plays %>%
         filter(
-            (pass == 1) | (rush == 1),
+            ((pass == 1) | (rush == 1))
+            & !(game_id %in% c(401635537))
             # ((wp_before >= 0.1) & (wp_before <= 0.9))
         ) %>%
         dplyr::left_join(schedules %>% dplyr::select(game_id, neutral_site, home_id, away_id), by = "game_id") %>%
@@ -680,7 +683,8 @@ for (yr in seasons) {
                 !is.na(EPA) & (explosive == F) ~ EPA,
                 .default = NA_real_
             )
-        )
+        ) %>%
+        dplyr::arrange(game_id, game_play_number)
 
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))
 
