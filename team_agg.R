@@ -501,9 +501,9 @@ adjust_epa = function(plays) {
             & valid_games >= 2
         )
 
-    x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
-    y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
-
+    # x_margin = sum(abs(range(team.adj$adjOffEPA, na.rm = T))) * 0.10
+    # y_margin = sum(abs(range(team.adj$adjDefEPA, na.rm = T))) * 0.05
+    #
     # team.adj %>%
     #     dplyr::filter(pos_team_id %in% valid_fbs_teams$team_id[valid_fbs_teams$conference %in% c("SEC", "Big 12", "ACC", "Big Ten")] & !is.na(adjOffEPA) & !is.na(adjDefEPA)) %>%
     #     ggplot2::ggplot(ggplot2::aes(x = adjOffEPA, y = adjDefEPA, team = pos_team))  +
