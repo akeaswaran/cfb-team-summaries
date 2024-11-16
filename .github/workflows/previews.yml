@@ -35,7 +35,7 @@ jobs:
         - run: Rscript ./team_agg.R
           env:
             CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
-        - run: Rscript ./postweek.R
+        - run: Rscript ./previews.R
           env:
             CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
             BLUESKY_APP_USER: ${{ secrets.BLUESKY_APP_USER }}
