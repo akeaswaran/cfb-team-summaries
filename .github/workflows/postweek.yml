@@ -1,0 +1,41 @@
+name: Skeet Post-Week Content
+
+on:
+  schedule:
+    - cron: "0 15 * 8-12 1" # Run at 10am every Monday from August through December.
+    # - cron: "0 15 * 1 1" # Run at 10am every Monday in January
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v4
+        - uses: r-lib/actions/setup-r@v2
+          with:
+            r-version: '4.3'
+        - run: |
+            install2.r --error \
+                stringr \
+                glue \
+                devtools \
+                glmnet \
+                webshot2 \
+                gt \
+                gtExtras
+        - run: |
+            Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
+            Rscript -e 'devtools::install_github(repo = "andreweatherman/cbbdata")'
+            Rscript -e 'devtools::install_github(repo = "andreweatherman/cbbplotR")'
+            Rscript -e 'devtools::install_github(repo = "Kazink36/cfbplotR")'
+            Rscript -e 'devtools::install_github(repo = "christopherkenny/bskyr")'
+        - run: Rscript ./team_agg.R
+          env:
+            CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+        - run: Rscript ./postweek.R
+          env:
+            CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+            BLUESKY_APP_USER: ${{ secrets.BLUESKY_APP_USER }}
+            BLUESKY_APP_PASS: ${{ secrets.BLUESKY_APP_PASS }}
+            SKEET_ENVIRONMENT: test
+
