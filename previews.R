@@ -499,7 +499,7 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
     skeet_title = paste0(skeet_title_parts, collapse = ", ")
 
     skeet_content_parts = c(
-        paste0("🏈: ", skeet_title),
+        paste0("🏈: ", skeet_title, "\n"),
         paste0("Game Preview: https://gameonpaper.com/cfb/game/", row$game_id),
         paste0(away_team_title, ": ", "https://gameonpaper.com/cfb/team/", row$away_team_id),
         paste0(home_team_title, ": ", "https://gameonpaper.com/cfb/team/", row$home_team_id)
