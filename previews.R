@@ -465,6 +465,14 @@ generate_matchup_image = function(game_id, home_id, away_id) {
             metric = title,
             home_text
         ) %>%
+        dplyr::add_row(
+            data.frame(
+                "away_text" = "-----",
+                "metric" = "-----",
+                "home_text" = "-----"
+            ),
+            .before = 0
+        ) %>%
         dplyr::rename_with(~matchup_df$away_team[[1]], away_text) %>%
         dplyr::rename_with(~matchup_df$home_team[[1]], home_text) %>%
         readr::format_tsv()
