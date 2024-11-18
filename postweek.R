@@ -348,7 +348,7 @@ def_stats_graphic = team.adj %>%
 
 ## skeet the net, off, def tables
 
-pbp = cfbfastR::load_cfb_pbp(seasons = current_week$season)
+pbp = cfbfastR::load_cfb_pbp(seasons = as.numeric(current_week$season))
 games_raw = cfbfastR::load_cfb_schedules()
 
 valid_fbs_teams <- cfbfastR::cfbd_team_info(only_fbs = T)
