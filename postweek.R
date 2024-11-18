@@ -22,6 +22,34 @@ team.adj = read.csv(data_path) %>%
         adjDefEPA = adj_def_epa
     )
 
+current_schedule = cfbfastR::espn_cfb_calendar(groups = "FBS")
+current_week = current_schedule %>%
+    dplyr::mutate(
+        end_date = lubridate::as_datetime(end_date, format = "%FT%H:%SZ"),
+        start_date = lubridate::as_datetime(start_date, format = "%FT%H:%SZ"),
+    ) %>%
+    dplyr::filter(
+        Sys.Date() >= end_date
+        # & Sys.Date() >= start_date
+    ) %>%
+    dplyr::last() %>%
+    dplyr::select(
+        season,
+        season_type,
+        week,
+        week_start_date = start_date,
+        week_end_date = end_date
+    ) %>%
+    dplyr::mutate(
+        week = as.character(week),
+        season = as.character(season),
+        season_type_key = dplyr::case_when(
+            season_type == "Regular Season" ~ "regular",
+            season_type == "Postseason" ~ "postseason",
+            season_type == "Off Season" ~ "offseason"
+        )
+    )
+
 generate_adj_epa_comp = function(classif) {
     base = team.adj %>%
         dplyr::filter(fbs_class == classif & !is.na(adjOffEPA) & !is.na(adjDefEPA))
@@ -320,35 +348,7 @@ def_stats_graphic = team.adj %>%
 
 ## skeet the net, off, def tables
 
-current_schedule = cfbfastR::espn_cfb_calendar(groups = "FBS")
-current_week = current_schedule %>%
-    dplyr::mutate(
-        end_date = lubridate::as_datetime(end_date, format = "%FT%H:%SZ"),
-        start_date = lubridate::as_datetime(start_date, format = "%FT%H:%SZ"),
-    ) %>%
-    dplyr::filter(
-        Sys.Date() >= end_date
-        # & Sys.Date() >= start_date
-    ) %>%
-    dplyr::last() %>%
-    dplyr::select(
-        season,
-        season_type,
-        week,
-        week_start_date = start_date,
-        week_end_date = end_date
-    ) %>%
-    dplyr::mutate(
-        week = as.character(week),
-        season = as.character(season),
-        season_type_key = dplyr::case_when(
-            season_type == "Regular Season" ~ "regular",
-            season_type == "Postseason" ~ "postseason",
-            season_type == "Off Season" ~ "offseason"
-        )
-    )
-
-pbp = readRDS("~/Downloads/pbp_players_pos_2024.rds")#cfbfastR::load_cfb_pbp()
+pbp = cfbfastR::load_cfb_pbp(seasons = current_week$season)
 games_raw = cfbfastR::load_cfb_schedules()
 
 valid_fbs_teams <- cfbfastR::cfbd_team_info(only_fbs = T)
