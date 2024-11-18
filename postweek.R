@@ -1,3 +1,12 @@
+# install libraries
+install.packages("stringr", "glue", "devtools", "glmnet", "webshot2", "gt", "gtExtras", "tidyverse")
+devtools::install_github(repo = "sportsdataverse/cfbfastR")
+devtools::install_github(repo = "andreweatherman/cbbdata")
+devtools::install_github(repo = "andreweatherman/cbbplotR")
+devtools::install_github(repo = "Kazink36/cfbplotR")
+devtools::install_github(repo = "christopherkenny/bskyr")
+
+# run code
 library(tidyverse)
 library(dplyr)
 library(cbbdata)
