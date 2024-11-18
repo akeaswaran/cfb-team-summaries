@@ -835,8 +835,8 @@ fire_skeet = function(content, reply = NULL, live_run = FALSE) {
                 paste0(printing_verb, " skeet:"),
                 content[["text"]],
                 paste0("With image at filepath: ", content[["images"]]),
-                paste0("Alt Text:",content[["images_alt"]]),
-                paste0("Reply: ", content[["reply"]][[1]])
+                paste0("Alt Text:", content[["images_alt"]]),
+                paste0("Reply: ", content[["reply"]])
             ),
             collapse = "\n"
         )
