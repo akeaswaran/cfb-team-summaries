@@ -26,6 +26,7 @@ current_schedule = cfbfastR::espn_cfb_calendar(groups = "FBS")
 current_week = current_schedule %>%
     dplyr::mutate(
         end_date = lubridate::as_datetime(end_date, format = "%FT%H:%SZ"),
+        end_date = lubridate::as_date(end_date),
         start_date = lubridate::as_datetime(start_date, format = "%FT%H:%SZ"),
     ) %>%
     dplyr::filter(
@@ -778,93 +779,83 @@ thread_content = list(
     ),
     list(
         "text" = glue::glue("Adjusted EPA through {formatted_file_date}, P4\n\nLink: https://gameonpaper.com/cfb/year/2024/charts/team/epa"),
-        "image" = glue::glue("./figures/{formatted_file_date}-P4.png"),
-        "alt_text" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Power 4 teams as of ", formatted_file_date)#,
+        "images" = glue::glue("./figures/{formatted_file_date}-P4.png"),
+        "images_alt" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Power 4 teams as of ", formatted_file_date)#,
     ),
     list(
         "text" = glue::glue("Adjusted EPA through {formatted_file_date}, G6\n\nLink: https://gameonpaper.com/cfb/year/2024/charts/team/epa"),
-        "image" = glue::glue("./figures/{formatted_file_date}-G6.png"),
-        "alt_text" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Group of 6 teams as of ", formatted_file_date)#,
+        "images" = glue::glue("./figures/{formatted_file_date}-G6.png"),
+        "images_alt" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Group of 6 teams as of ", formatted_file_date)#,
     ),
     list(
         "text" = glue::glue("Net Statistics Leaders through {formatted_file_date}\n\nFull list: https://gameonpaper.com/cfb/year/2024/teams/differential"),
-        "image" = glue::glue("./figures/{formatted_file_date}-net_stat.png")#,
-        # "alt_text" = ""
+        "images" = glue::glue("./figures/{formatted_file_date}-net_stat.png")#,
+        # "images_alt" = ""
     ),
     list(
         "text" = glue::glue("Offensive Statistics Leaders through {formatted_file_date}\n\nFull list: https://gameonpaper.com/cfb/year/2024/teams/offensive"),
-        "image" = glue::glue("./figures/{formatted_file_date}-off_stat.png")#,
-        # "alt_text" = ""
+        "images" = glue::glue("./figures/{formatted_file_date}-off_stat.png")#,
+        # "images_alt" = ""
     ),
     list(
         "text" = glue::glue("Defensive Statistics Leaders through {formatted_file_date}\n\nFull list: https://gameonpaper.com/cfb/year/2024/teams/defensive"),
-        "image" = glue::glue("./figures/{formatted_file_date}-def_stat.png")#,
-        # "alt_text" = ""
+        "images" = glue::glue("./figures/{formatted_file_date}-def_stat.png")#,
+        # "images_alt" = ""
     ),
     list(
         "text" = glue::glue("Weekly Passing Leaders - {formatted_file_date}\n\nFull list: https://gameonpaper.com/cfb/year/2024/players/passing"),
-        "image" = glue::glue("./figures/{formatted_file_date}-passing.png")#,
-        # "alt_text" = ""
+        "images" = glue::glue("./figures/{formatted_file_date}-passing.png")#,
+        # "images_alt" = ""
     ),
     list(
         "text" = glue::glue("Weekly Rushing Leaders - {formatted_file_date}\n\nFull list: https://gameonpaper.com/cfb/year/2024/players/rushing"),
-        "image" = glue::glue("./figures/{formatted_file_date}-rushing.png")#,
-        # "alt_text" = ""
+        "images" = glue::glue("./figures/{formatted_file_date}-rushing.png")#,
+        # "images_alt" = ""
     ),
     list(
         "text" = glue::glue("Weekly Receiving Leaders - {formatted_file_date}\n\nFull list: https://gameonpaper.com/cfb/year/2024/players/receiving"),
-        "image" = glue::glue("./figures/{formatted_file_date}-receiving.png")#,
-        # "alt_text" = ""
+        "images" = glue::glue("./figures/{formatted_file_date}-receiving.png")#,
+        # "images_alt" = ""
     )
 )
 
 fire_skeet = function(content, reply = NULL, live_run = FALSE) {
-    # alt_text = ifelse(!is.null(content[["alt_text"]]), content[["alt_text"]], content[["text"]])
-    if (!is.null(content[["alt_text"]]) && !is.null(content[["image"]])) {
-        alt_text <- content[["alt_text"]]
-    } else if (!is.null(content[["image"]])) {
-        alt_text <- content[["text"]]
-    } else {
-        alt_text <- NULL
+    if (!is.null(reply)) {
+        content[["reply"]] = paste0("https://bsky.app/profile/gameonpaper.com/post/", retrieve_skeet_id(reply))
     }
+
+    if (is.null(content[["images_alt"]]) && !is.null(content[["images"]])) {
+        content[["images_alt"]] = content[["text"]]
+    }
+
     printing_verb = dplyr::if_else(live_run, "Sending", "Previewing")
     print(
         paste0(
             c(
                 paste0(printing_verb, " skeet:"),
                 content[["text"]],
-                paste0("With image at filepath: ", content[["image"]]),
-                "Alt Text:",
-                alt_text
+                paste0("With image at filepath: ", content[["images"]]),
+                paste0("Alt Text:",content[["images_alt"]]),
+                paste0("Reply: ", content[["reply"]][[1]])
             ),
             collapse = "\n"
         )
     )
+
+
     if (live_run) {
-        if (is.null(reply)) {
-            return(
-                bskyr::bs_post(
-                    content[["text"]],
-                    images = content[["image"]],
-                    images_alt = alt_text
-                )
-            )
-        } else {
-            return(
-                bskyr::bs_post(
-                    content[["text"]],
-                    images = content[["image"]],
-                    images_alt = alt_text,
-                    reply = paste0("https://bsky.app/profile/gameonpaper.com/post/", retrieve_skeet_id(reply))
-                )
-            )
-        }
+        return(do.call(bskyr::bs_post, content))
+    } else {
+        return(data.frame(
+            uri = c("post/test")
+        ))
     }
 }
 
+
 is_live_run = Sys.getenv("SKEET_ENVIRONMENT") == "prod"
 reply = NULL
-delay = dplyr::if_else(is_live_run, 60 * 2.5, 5)
+delay = dplyr::if_else(is_live_run, 30, 5)
 for (i in 1:(length(thread_content))) {
     g = thread_content[[i]]
     reply <- fire_skeet(g, reply, is_live_run)
