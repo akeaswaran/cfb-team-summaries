@@ -819,7 +819,14 @@ thread_content = list(
 )
 
 fire_skeet = function(content, reply = NULL, live_run = FALSE) {
-    alt_text = ifelse("alt_text" %in% names(content), content[["alt_text"]], content[["text"]])
+    # alt_text = ifelse(!is.null(content[["alt_text"]]), content[["alt_text"]], content[["text"]])
+    if (!is.null(content[["alt_text"]]) && !is.null(content[["image"]])) {
+        alt_text <- content[["alt_text"]]
+    } else if (!is.null(content[["image"]])) {
+        alt_text <- content[["text"]]
+    } else {
+        alt_text <- NULL
+    }
     printing_verb = dplyr::if_else(live_run, "Sending", "Previewing")
     print(
         paste0(
@@ -859,7 +866,8 @@ is_live_run = Sys.getenv("SKEET_ENVIRONMENT") == "prod"
 reply = NULL
 delay = dplyr::if_else(is_live_run, 60 * 2.5, 5)
 for (i in 1:(length(thread_content))) {
-    g = thread_content[i]
+    g = thread_content[[i]]
     reply <- fire_skeet(g, reply, is_live_run)
+    print(paste0("Sleeping for ", delay, " seconds before skeeting again..."))
     Sys.sleep(delay)
 }
