@@ -858,8 +858,8 @@ fire_skeet = function(content, reply = NULL, live_run = FALSE) {
 is_live_run = Sys.getenv("SKEET_ENVIRONMENT") == "prod"
 reply = NULL
 delay = dplyr::if_else(is_live_run, 60 * 2.5, 5)
-for (i in 1:(length(content))) {
-    g = content[i]
+for (i in 1:(length(thread_content))) {
+    g = thread_content[i]
     reply <- fire_skeet(g, reply, is_live_run)
     Sys.sleep(delay)
 }
