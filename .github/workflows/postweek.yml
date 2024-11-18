@@ -41,5 +41,5 @@ jobs:
             CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
             BLUESKY_APP_USER: ${{ secrets.BLUESKY_APP_USER }}
             BLUESKY_APP_PASS: ${{ secrets.BLUESKY_APP_PASS }}
-            SKEET_ENVIRONMENT: test
+            SKEET_ENVIRONMENT: prod
 
