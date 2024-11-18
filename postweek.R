@@ -774,17 +774,17 @@ retrieve_skeet_id = function(resp) {
 # start skeet thread
 thread_content = list(
     list(
-        "text" = glue::glue('🤖 Stand-by for an automated thread of updates:\n\nSeason: {current_week$season}\nWeek: {current_week$week}\nType: {current_week$season_type}\n\nReach out to @akeaswaran.me or @saiemgilani.bsky.social with any concerns!'),
+        "text" = glue::glue('🤖 Stand-by for an automated thread of updates:\n\nSeason: {current_week$season}\nWeek: {current_week$week}\nType: {current_week$season_type}\n\nReach out to @akeaswaran.me or @saiemgilani.bsky.social with any concerns!')#,
     ),
     list(
         "text" = glue::glue("Adjusted EPA through {formatted_file_date}, P4\n\nLink: https://gameonpaper.com/cfb/year/2024/charts/team/epa"),
         "image" = glue::glue("./figures/{formatted_file_date}-P4.png"),
-        "alt_text" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Power 4 teams as of ", formatted_file_date),
+        "alt_text" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Power 4 teams as of ", formatted_file_date)#,
     ),
     list(
         "text" = glue::glue("Adjusted EPA through {formatted_file_date}, G6\n\nLink: https://gameonpaper.com/cfb/year/2024/charts/team/epa"),
         "image" = glue::glue("./figures/{formatted_file_date}-G6.png"),
-        "alt_text" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Group of 6 teams as of ", formatted_file_date),
+        "alt_text" = paste0("Shows team logos plotted by offensive adjusted EPA/play on the X-axis and defensive adjusted EPA/play on the Y-axis for the Group of 6 teams as of ", formatted_file_date)#,
     ),
     list(
         "text" = glue::glue("Net Statistics Leaders through {formatted_file_date}\n\nFull list: https://gameonpaper.com/cfb/year/2024/teams/differential"),
