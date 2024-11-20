@@ -4,6 +4,9 @@ library(cbbdata)
 library(cbbplotR)
 library(cfbplotR)
 library(bskyr)
+library(webshot2)
+library(gt)
+library(gtExtras)
 
 # all games involving ranked teams + GT + FSU
 current_schedule = cfbfastR::espn_cfb_calendar(groups = "FBS")
@@ -61,13 +64,29 @@ rankings = rankings_raw %>%
     )
 
 target_teams = c(rankings$team_id, 59, 52)
+
+
+
 selected_games = games %>%
     dplyr::filter(
-        (as.character(home_team_id) %in% as.character(teams$team_id))
+        # game is today
+        lubridate::as_date(game_date_time) == Sys.Date()
+        # teams are FBS
+        & (as.character(home_team_id) %in% as.character(teams$team_id))
         & (as.character(away_team_id) %in% as.character(teams$team_id))
-        & (as.character(home_team_id) %in% as.character(target_teams)
-        | as.character(away_team_id) %in% as.character(target_teams))
-        & game_date_time > Sys.time()
+        & (
+            (
+                # if saturday in Aug-Dec, only post ranked games
+                base::weekdays(Sys.Date()) == "Saturday"
+                & (lubridate::month(Sys.Date()) >= 8 & lubridate::month(Sys.Date()) <= 12)
+                &  (as.character(home_team_id) %in% as.character(target_teams)
+                    | as.character(away_team_id) %in% as.character(target_teams))
+            )
+            | (
+                # if any non-saturday, post any games
+                base::weekdays(Sys.Date()) != "Saturday"
+            )
+        )
     ) %>%
     dplyr::left_join(rankings %>% dplyr::select(home_team_rank = rank, team_id), by = c("home_team_id" = "team_id")) %>%
     dplyr::left_join(rankings %>% dplyr::select(away_team_rank = rank, team_id), by = c("away_team_id" = "team_id"))
@@ -507,7 +526,7 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
     skeet_title = paste0(skeet_title_parts, collapse = ", ")
 
     skeet_content_parts = c(
-        paste0("🏈: ", skeet_title, "\n"),
+        paste0("🤖🏈: ", skeet_title, "\n"),
         paste0("Game Preview: https://gameonpaper.com/cfb/game/", row$game_id),
         paste0(away_team_title, ": ", "https://gameonpaper.com/cfb/team/", row$away_team_id),
         paste0(home_team_title, ": ", "https://gameonpaper.com/cfb/team/", row$home_team_id)
@@ -528,39 +547,37 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
         )
     )
 
+    args = list(
+        "text" = skeet_content,
+        "images" = c(img_data$file_path),
+        "images_alt" = c(img_data$alt_text)
+    )
+
+    if (!is.null(reply)) {
+        args[["reply"]] = paste0("https://bsky.app/profile/gameonpaper.com/post/", retrieve_skeet_id(reply))
+    }
+
     if (live_run) {
-        if (is.null(reply)) {
-            return(
-                bskyr::bs_post(
-                    skeet_content,
-                    images = c(img_data$file_path),
-                    images_alt = c(img_data$alt_text),
-                )
-            )
-        } else {
-            return(
-                bskyr::bs_post(
-                    skeet_content,
-                    images = c(img_data$file_path),
-                    images_alt = c(img_data$alt_text),
-                    reply = paste0("https://bsky.app/profile/gameonpaper.com/post/", retrieve_skeet_id(reply))
-                )
-            )
-        }
+        return(do.call(bskyr::bs_post, args))
+    } else {
+        return(data.frame(
+            uri = c("post/test")
+        ))
     }
 }
 
-# fire off at 2.5 min intervals
+# fire off at 0.5 min intervals
 is_live_run = Sys.getenv("SKEET_ENVIRONMENT") == "prod"
 reply = NULL
-delay = dplyr::if_else(is_live_run, 60 * 2.5, 5)
+delay = dplyr::if_else(is_live_run, 30, 5)
 if (nrow(selected_games) > 0) {
-    print(paste0("Skeeting for FBS games involving ranked teams: ", nrow(selected_games), " - live_run: ", is_live_run))
+    print(paste0("Skeeting for relevant FBS games: ", nrow(selected_games), " - live_run: ", is_live_run))
     for (i in 1:(nrow(selected_games))) {
         g = selected_games[i, ]
         reply <- fire_skeet(g, reply, is_live_run)
+        print(paste0("Waiting ", delay, " seconds for skeeting again..."))
         Sys.sleep(delay)
     }
 } else {
-    print("No FBS games involving ranked teams, bailing out")
+    print("No relevant FBS games, bailing out")
 }
