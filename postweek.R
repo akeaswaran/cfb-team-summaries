@@ -858,7 +858,7 @@ reply = NULL
 delay = dplyr::if_else(is_live_run, 30, 5)
 for (i in 1:(length(thread_content))) {
     g = thread_content[[i]]
-    reply <- fire_skeet(g, reply, is_live_run)
+    reply <- fire_skeet(g, reply = NULL, is_live_run) # turning off threading
     print(paste0("Sleeping for ", delay, " seconds before skeeting again..."))
     Sys.sleep(delay)
 }
