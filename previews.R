@@ -574,7 +574,7 @@ if (nrow(selected_games) > 0) {
     print(paste0("Skeeting for relevant FBS games: ", nrow(selected_games), " - live_run: ", is_live_run))
     for (i in 1:(nrow(selected_games))) {
         g = selected_games[i, ]
-        reply <- fire_skeet(g, reply, is_live_run)
+        reply <- fire_skeet(g, NULL, is_live_run) # disable threading
         print(paste0("Waiting ", delay, " seconds for skeeting again..."))
         Sys.sleep(delay)
     }
