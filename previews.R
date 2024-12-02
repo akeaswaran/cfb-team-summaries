@@ -550,7 +550,8 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
     args = list(
         "text" = skeet_content,
         "images" = c(img_data$file_path),
-        "images_alt" = c(img_data$alt_text)
+        "images_alt" = c(img_data$alt_text),
+        "max_tries" = 1
     )
 
     if (!is.null(reply)) {

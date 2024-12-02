@@ -842,6 +842,7 @@ fire_skeet = function(content, reply = NULL, live_run = FALSE) {
         )
     )
 
+    content[["max_tries"]] = 1
 
     if (live_run) {
         return(do.call(bskyr::bs_post, content))
