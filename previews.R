@@ -13,13 +13,15 @@ current_schedule = cfbfastR::espn_cfb_calendar(groups = "FBS")
 current_week = current_schedule %>%
     dplyr::mutate(
         end_date = lubridate::as_datetime(end_date, format = "%FT%H:%SZ"),
+        end_date = as.Date(end_date),
         start_date = lubridate::as_datetime(start_date, format = "%FT%H:%SZ"),
+        start_date = as.Date(start_date),
     ) %>%
     dplyr::filter(
         Sys.Date() <= end_date
         & Sys.Date() >= start_date
     ) %>%
-    dplyr::last() %>%
+    # dplyr::last() %>%
     dplyr::select(
         season,
         season_type,
@@ -37,17 +39,37 @@ current_week = current_schedule %>%
         )
     )
 
-games = cfbfastR::espn_cfb_schedule(
-    year = current_week$season,
-    week = current_week$week,
-    season_type = current_week$season_type_key
-)
+games = purrr::map(1:nrow(current_week), function(i) {
+    cur = current_week[i, ]
+    cfbfastR::espn_cfb_schedule(
+        year = cur$season,
+        # week = cur$week,
+        season_type = cur$season_type_key
+    )
+}) %>% purrr::list_rbind()
+
+if (!("notes" %in% colnames(games))) {
+    games_cfbd = purrr::map(1:nrow(current_week), function(i) {
+        cur = current_week[i, ]
+        cfbfastR::cfbd_game_info(
+            year = cur$season,
+            # week = cur$week,
+            season_type = cur$season_type_key
+        )
+    }) %>%
+        purrr::list_rbind() %>%
+        dplyr::mutate(game_id = as.character(game_id))
+
+    games = games %>%
+        dplyr::left_join(games_cfbd %>% dplyr::select(game_id, notes), by = "game_id")
+}
 
 rankings_raw = cfbfastR::cfbd_rankings(
-    year = cfbfastR:::most_recent_cfb_season(),
-    week = current_week$week,
-    season_type = current_week$season_type_key
+    year = dplyr::first(current_week)$season,
+    # week = dplyr::first(current_week)$week,
+    # season_type = dplyr::first(current_week)$season_type_key
 )
+
 teams = cfbfastR::cfbd_team_info(
     year = cfbfastR:::most_recent_cfb_season(),
     only_fbs = T
@@ -57,6 +79,7 @@ selected_poll = ifelse("Playoff Committee Rankings" %in% rankings_raw$poll, "Pla
 rankings = rankings_raw %>%
     dplyr::filter(
         poll == selected_poll
+        & week == max(week)
     ) %>%
     dplyr::left_join(teams %>% dplyr::select(team_id, school), by = c("school")) %>%
     dplyr::mutate(
@@ -78,18 +101,23 @@ selected_games = games %>%
             (
                 # if saturday in Aug-Dec, only post ranked games
                 base::weekdays(Sys.Date()) == "Saturday"
-                & (lubridate::month(Sys.Date()) >= 8 & lubridate::month(Sys.Date()) <= 12)
+                & (lubridate::month(Sys.Date()) >= 8 & lubridate::month(Sys.Date()) < 12)
                 &  (as.character(home_team_id) %in% as.character(target_teams)
                     | as.character(away_team_id) %in% as.character(target_teams))
             )
             | (
                 # if any non-saturday, post any games
-                base::weekdays(Sys.Date()) != "Saturday"
+                (base::weekdays(Sys.Date()) != "Saturday")
+                | (base::weekdays(Sys.Date()) == "Saturday"
+                    & (lubridate::month(Sys.Date()) == 12 | lubridate::month(Sys.Date()) == 1))
             )
         )
     ) %>%
     dplyr::left_join(rankings %>% dplyr::select(home_team_rank = rank, team_id), by = c("home_team_id" = "team_id")) %>%
-    dplyr::left_join(rankings %>% dplyr::select(away_team_rank = rank, team_id), by = c("away_team_id" = "team_id"))
+    dplyr::left_join(rankings %>% dplyr::select(away_team_rank = rank, team_id), by = c("away_team_id" = "team_id")) %>%
+    dplyr::group_by(game_id) %>%
+    dplyr::slice_min(order_by = dplyr::row_number(), n = 1, with_ties = F) %>%
+    dplyr::ungroup()
 # recreate Sumer matchup table from GoP page with CSV data, include team hashtags, link to matchup page
 clean_team_data = function(df) {
     df %>%
@@ -129,10 +157,10 @@ clean_team_data = function(df) {
 }
 
 generate_matchup_df = function(home_id, away_id) {
-    home_data = read.csv(paste0("./data/", current_week$season, "/", home_id, "/overall.csv")) %>%
+    home_data = read.csv(paste0("./data/", current_week$season[1], "/", home_id, "/overall.csv")) %>%
         clean_team_data()
 
-    away_data = read.csv(paste0("./data/", current_week$season, "/", away_id, "/overall.csv")) %>%
+    away_data = read.csv(paste0("./data/", current_week$season[1], "/", away_id, "/overall.csv")) %>%
         clean_team_data()
 
     away_off_home_df = away_data %>%
@@ -397,7 +425,7 @@ generate_matchup_image = function(game_id, home_id, away_id) {
         }
         "
         ) %>%
-        save_crop_gt(paste0(game_id, "-1.png"))
+        save_crop_gt(paste0(game_id[1], "-1.png"))
 
     matchup_df %>%
         dplyr::arrange(name) %>%
@@ -449,12 +477,12 @@ generate_matchup_image = function(game_id, home_id, away_id) {
         }
         "
         ) %>%
-        save_crop_gt(paste0(game_id, "-2.png"))
+        save_crop_gt(paste0(game_id[1], "-2.png"))
 
-    file_path = paste0("./figures/", game_id, ".png")
+    file_path = paste0("./figures/", game_id[1], ".png")
     images = c(
-        paste0("./figures/", game_id, "-1.png"),
-        paste0("./figures/", game_id, "-2.png")
+        paste0("./figures/", game_id[1], "-1.png"),
+        paste0("./figures/", game_id[1], "-2.png")
     )
     magick::image_read(images) %>%
     magick::image_append(stack = T) %>%
@@ -508,12 +536,16 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
     print(paste0("generating skeet for game ", row$game_id, " - reply? ", !is.null(reply), ", live_run: ", live_run))
 
     print(paste0("generating skeet image data..."))
-    img_data = generate_matchup_image(row$game_id, row$home_team_id, row$away_team_id)
+    img_data = generate_matchup_image(row$game_id[1], row$home_team_id[1], row$away_team_id[1])
 
     print(paste0("generating skeet content..."))
     home_team_title = dplyr::if_else(is.na(row$home_team_rank), row$home_team_location, paste0("#", row$home_team_rank, " ", row$home_team_location))
     away_team_title = dplyr::if_else(is.na(row$away_team_rank), row$away_team_location, paste0("#", row$away_team_rank, " ", row$away_team_location))
     game_title = paste0(away_team_title, " vs ", home_team_title)
+    if (!is.na(row$notes)) {
+        game_title = paste0(row$notes,": ", game_title)
+    }
+
     time_string = format(row$game_date_time, "%I:%M %p %Z")
     network = dplyr::if_else(is.na(row$broadcast), "", row$broadcast)
 
