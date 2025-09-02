@@ -7,6 +7,8 @@ library(bskyr)
 library(webshot2)
 library(gt)
 library(gtExtras)
+# devtools::install_github("sportsdataverse/cfbfastR")
+library(cfbfastR)
 
 # all games involving ranked teams + GT + FSU
 current_schedule = cfbfastR::espn_cfb_calendar(groups = "FBS")
@@ -42,7 +44,7 @@ current_week = current_schedule %>%
 games = purrr::map(1:nrow(current_week), function(i) {
     cur = current_week[i, ]
     cfbfastR::espn_cfb_schedule(
-        year = cur$season,
+        year = as.integer(cur$season),
         # week = cur$week,
         season_type = cur$season_type_key
     )
@@ -52,7 +54,7 @@ if (!("notes" %in% colnames(games))) {
     games_cfbd = purrr::map(1:nrow(current_week), function(i) {
         cur = current_week[i, ]
         cfbfastR::cfbd_game_info(
-            year = cur$season,
+            year = as.integer(cur$season),
             # week = cur$week,
             season_type = cur$season_type_key
         )
@@ -65,13 +67,13 @@ if (!("notes" %in% colnames(games))) {
 }
 
 rankings_raw = cfbfastR::cfbd_rankings(
-    year = dplyr::first(current_week)$season,
+    year = as.integer(dplyr::first(current_week)$season),
     # week = dplyr::first(current_week)$week,
     # season_type = dplyr::first(current_week)$season_type_key
 )
 
 teams = cfbfastR::cfbd_team_info(
-    year = cfbfastR:::most_recent_cfb_season(),
+    year = 2025,
     only_fbs = T
 )
 selected_poll = ifelse("Playoff Committee Rankings" %in% rankings_raw$poll, "Playoff Committee Rankings", "AP Top 25")
@@ -157,10 +159,10 @@ clean_team_data = function(df) {
 }
 
 generate_matchup_df = function(home_id, away_id) {
-    home_data = read.csv(paste0("./data/", current_week$season[1], "/", home_id, "/overall.csv")) %>%
+    home_data = read.csv(paste0("./data/", 2024, "/", home_id, "/overall.csv")) %>%
         clean_team_data()
 
-    away_data = read.csv(paste0("./data/", current_week$season[1], "/", away_id, "/overall.csv")) %>%
+    away_data = read.csv(paste0("./data/", 2024, "/", away_id, "/overall.csv")) %>%
         clean_team_data()
 
     away_off_home_df = away_data %>%
@@ -600,9 +602,9 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
 }
 
 # fire off at 0.5 min intervals
-is_live_run = Sys.getenv("SKEET_ENVIRONMENT") == "prod"
+is_live_run = F #Sys.getenv("SKEET_ENVIRONMENT") == "prod"
 reply = NULL
-delay = dplyr::if_else(is_live_run, 30, 5)
+delay = 5 #dplyr::if_else(is_live_run, 30, 5)
 if (nrow(selected_games) > 0) {
     print(paste0("Skeeting for relevant FBS games: ", nrow(selected_games), " - live_run: ", is_live_run))
     for (i in 1:(nrow(selected_games))) {

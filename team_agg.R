@@ -1,9 +1,11 @@
+RCurl::curlSetOpt(timeout = 2000)
 library(cfbfastR)
 library(dplyr)
 library(glue)
 library(stringr)
 library(glmnet)
 library(janitor)
+set.seed(2018)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
 seasons <- 2014:max_season
@@ -386,22 +388,11 @@ prepare_percentiles <- function(x) {
     return(summ_tmp)
 }
 
-adjust_epa = function(plays) {
+adjust_metric = function(plays, metric) {
     # https://makennnahack.github.io/makenna-hack.github.io/publications/opp_adj_rank_project/
-    pbp.base = plays %>%
+    pbp.clean <- plays |>
         dplyr::filter(
-            !is.na(EPA)
-            & ((pass == 1) | (rush == 1))
-        ) %>%
-        dplyr::mutate(
-            dplyr::across(c(pos_team_id, def_pos_team_id), ~ as.character(.x))
-        )
-
-    pbp.clean <- pbp.base |>
-        filter(
-            (pos_team_id %in% valid_fbs_teams$team_id)
-            & (def_pos_team_id %in% valid_fbs_teams$team_id)
-            & (wp_before >= 0.1) & (wp_before <= 0.9) # remove garbage time, no vegas spread included in this WP Model
+            !is.na(!!dplyr::sym(metric))
         ) |>
         group_by(game_id) |>
         mutate(hfa = dplyr::case_when(
@@ -410,26 +401,28 @@ adjust_epa = function(plays) {
             .default = -1
         )) %>%
         ungroup() %>%
-        select(pos_team_id, pos_team, def_pos_team_id, def_pos_team, game = game_id, EPA, hfa)
+        select(pos_team_id, pos_team, def_pos_team_id, def_pos_team, game = game_id, !!dplyr::sym(metric), hfa)
 
-    EPA.data <- pbp.clean |>
-        select(EPA)
+    metric.data <- pbp.clean |>
+        select(!!dplyr::sym(metric))
 
     dummies <- model.matrix(~hfa+pos_team_id+def_pos_team_id, data = pbp.clean)
 
     data.dummies <- as.data.frame(dummies)
 
-    data.dummies <- cbind(data.dummies, EPA.data) |> select(-`(Intercept)`)
+    data.dummies <- cbind(data.dummies, metric.data) |> select(-`(Intercept)`)
 
     x <- as.matrix(data.dummies[, -ncol(data.dummies)])
-    y <- data.dummies$EPA
+    y <- data.dummies[[metric]]
 
-    cv = glmnet::cv.glmnet(x, y, lambda = c(75,100,125,150,175,200,225,250,275,300,325))
-    target_lambda = cv$lambda[[1]]
+    # find optimal lambda value based on available data
+    cv = glmnet::cv.glmnet(x, y, intercept = T, alpha = 0)
+    browser()
+    target_lambda = cv$lambda.min
 
     ridge_model <- glmnet::glmnet(x, y, alpha = 0, lambda = target_lambda, intercept = T)
     ridge.coeff <- coef(ridge_model, s = target_lambda)
-
+    browser()
     intercept <- ridge.coeff[1]
 
     pos_team_coeffs <- ridge.coeff[grep("^pos_team_id", rownames(ridge.coeff)), , drop = FALSE] + intercept
@@ -451,44 +444,51 @@ adjust_epa = function(plays) {
     rownames(defense) <- NULL
 
     defense$team_id <- gsub("^def_pos_team_id", "", defense$team_id)
-    # defense$team_id = factor(defense$team_id, levels = levels(pbp.base$pos_team_id))
 
-    off_epa_game <- pbp.base |>
+    adjustments = offense %>%
+        dplyr::full_join(defense, by = "team_id")
+
+    return(adjustments)
+
+}
+
+summarize_team_metric = function(plays, metric, adjustments) {
+    off_game <- plays |>
         group_by(game_id, pos_team_id, def_pos_team_id) |>
         summarise(
             count = dplyr::n(),
             pos_team = dplyr::last(pos_team),
             def_pos_team = dplyr::last(def_pos_team),
-            rawOffEPA = mean(EPA, na.rm = T)
+            rawOff = mean(!!dplyr::sym(metric), na.rm = T)
         ) |>
-        left_join(defense, by = c("def_pos_team_id" = "team_id")) |>
-        mutate(adjOffEPA = rawOffEPA - adjmodelDef) |>
-        select(game_id, pos_team_id, pos_team, off_count = count, def_strength_faced = adjmodelDef, rawOffEPA, adjOffEPA) |>
+        left_join(adjustments %>% dplyr::select(team_id, adjmodelDef), by = c("def_pos_team_id" = "team_id")) |>
+        mutate(adjOff = rawOff - adjmodelDef) |>
+        select(game_id, pos_team_id, pos_team, off_count = count, def_strength_faced = adjmodelDef, rawOff, adjOff) |>
         ungroup()
 
-    def_epa_game <- pbp.base |>
+    def_game <- plays |>
         group_by(game_id, def_pos_team_id, pos_team_id) |>
         summarise(
             count = dplyr::n(),
             pos_team = dplyr::last(pos_team),
             def_pos_team = dplyr::last(def_pos_team),
-            rawDefEPA = mean(EPA, na.rm = T)
+            rawDef = mean(!!dplyr::sym(metric), na.rm = T)
         ) |>
-        left_join(offense, by = c("pos_team_id" = "team_id")) |>
-        mutate(adjDefEPA = rawDefEPA - adjmodelOff) |>
-        select(game_id, def_pos_team_id, def_pos_team, def_count = count, off_strength_faced = adjmodelOff, rawDefEPA, adjDefEPA) |>
+        left_join(adjustments %>% dplyr::select(team_id, adjmodelOff), by = c("pos_team_id" = "team_id")) |>
+        mutate(adjDef = rawDef - adjmodelOff) |>
+        select(game_id, def_pos_team_id, def_pos_team, def_count = count, off_strength_faced = adjmodelOff, rawDef, adjDef) |>
         ungroup()
 
-    opp.adj <- off_epa_game |>
-        left_join(def_epa_game, by = c("game_id", "pos_team_id" = "def_pos_team_id"))
+    opp.adj <- off_game |>
+        left_join(def_game, by = c("game_id", "pos_team_id" = "def_pos_team_id"))
 
     team.adj = opp.adj %>%
         dplyr::group_by(pos_team_id) %>%
         dplyr::summarise(
             pos_team = dplyr::last(pos_team),
             team_games = dplyr::n(),
-            valid_games = sum(!is.na(adjOffEPA) & !is.na(adjDefEPA), na.rm = T),
-            dplyr::across(dplyr::contains("EPA") | dplyr::contains("strength"), ~ mean(.x, na.rm = T))
+            valid_games = sum(!is.na(adjOff) & !is.na(adjDef), na.rm = T),
+            dplyr::across(dplyr::contains("raw") | dplyr::contains("adj") | dplyr::contains("strength"), ~ mean(.x, na.rm = T))
         ) %>%
         dplyr::ungroup() %>%
         dplyr::mutate(
@@ -496,8 +496,8 @@ adjust_epa = function(plays) {
         ) %>%
         dplyr::filter(
             pos_team_id %in% valid_fbs_teams$team_id
-            & !is.na(adjOffEPA)
-            & !is.na(adjDefEPA)
+            & !is.na(adjOff)
+            & !is.na(adjDef)
             & valid_games >= 2
         )
 
@@ -506,17 +506,71 @@ adjust_epa = function(plays) {
             -dplyr::starts_with("raw"),
             -team_games,
         ) %>%
-        dplyr::mutate(
-            netAdjEPA = adjOffEPA - adjDefEPA,
-
-            adjOffEPA_rank = rank(-adjOffEPA),
-            adjDefEPA_rank = rank(adjDefEPA),
-            netAdjEPA_rank = rank(-netAdjEPA),
-        ) %>%
         janitor::clean_names() %>%
         dplyr::rename(
             team_id = pos_team_id
         )
+}
+
+adjust_epa = function(plays) {
+    # https://makennnahack.github.io/makenna-hack.github.io/publications/opp_adj_rank_project/
+    fbs_plays = plays %>%
+        dplyr::filter(
+            (pos_team_id %in% valid_fbs_teams$team_id)
+            & (def_pos_team_id %in% valid_fbs_teams$team_id)
+            & (wp_before >= 0.1) & (wp_before <= 0.9) # remove garbage time, no vegas spread included in this WP Model
+        )
+
+    team_adj = fbs_plays %>%
+        adjust_metric("EPA")
+
+    team_summ = fbs_plays %>%
+        summarize_team_metric("EPA", team_adj) %>%
+        dplyr::rename(
+            adj_off_epa = adj_off,
+            adj_def_epa = adj_def
+        ) %>%
+        dplyr::mutate(
+            net_adj_epa = adj_off_epa - adj_def_epa,
+        )
+
+    pass_adj = fbs_plays %>%
+        dplyr::filter(pass == 1) %>%
+        adjust_metric("EPA")
+
+    pass_summ = fbs_plays %>%
+        dplyr::filter(pass == 1) %>%
+        summarize_team_metric("EPA", pass_adj) %>%
+        dplyr::rename(
+            adj_off_pass_epa = adj_off,
+            adj_def_pass_epa = adj_def
+        )
+
+    rush_adj = fbs_plays %>%
+        dplyr::filter(rush == 1) %>%
+        adjust_metric("EPA")
+
+    rush_summ = fbs_plays %>%
+        dplyr::filter(rush == 1) %>%
+        summarize_team_metric("EPA", rush_adj) %>%
+        dplyr::rename(
+            adj_off_rush_epa = adj_off,
+            adj_def_rush_epa = adj_def
+        )
+
+    composite = team_summ %>%
+        dplyr::full_join(pass_summ, by = c("team_id", "pos_team")) %>%
+        dplyr::full_join(rush_summ, by = c("team_id", "pos_team")) %>%
+        dplyr::select(
+            -dplyr::contains("faced"),
+            -valid_games.y,
+            -valid_games.x
+        ) %>%
+        dplyr::mutate(
+            dplyr::across(dplyr::starts_with("adj_off") | dplyr::starts_with("net_adj"), ~ rank(-.x), .names = "{.col}_rank"),
+            dplyr::across(dplyr::starts_with("adj_def"), ~ rank(.x), .names = "{.col}_rank")
+        )
+    return(composite)
 }
 
 for (yr in seasons) {
@@ -628,7 +682,10 @@ for (yr in seasons) {
                 .default = NA_real_
             )
         ) %>%
-        dplyr::arrange(game_id, game_play_number)
+        dplyr::arrange(game_id, game_play_number) %>%
+        dplyr::mutate(
+            dplyr::across(c(pos_team_id, def_pos_team_id), ~ as.character(.x))
+        )
 
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))
 
@@ -921,7 +978,11 @@ for (yr in seasons) {
     team_data <- left_join(team_data, team_rush_data, by = c("pos_team_id" = "pos_team_id"), suffix = c("","_rush"))
 
     print(glue::glue("running ridge regression adjustments...."))
-    adj_EPA_df = adjust_epa(plays)
+    adj_EPA_df = plays %>%
+        dplyr::filter(
+            ((pass == 1) | (rush == 1))
+        ) %>%
+        adjust_epa()
 
     print(glue("Generating year and team CSVs..."))
 
