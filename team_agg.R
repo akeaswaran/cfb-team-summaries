@@ -328,8 +328,8 @@ prepare_for_write <- function(x, yr) {
         ) %>%
         dplyr::mutate(
             fbs_class = dplyr::case_when(
-                season == 2024 & !is.na(conference) & (conference %in% c("SEC", "Big 12", "ACC", "Big Ten") | pos_team == "Notre Dame") ~ "P4",
-                season == 2024 & (!is.na(conference) | (team_id %in% c("41", "113"))) ~ "G6", # UCONN and UMASS
+                season >= 2024 & !is.na(conference) & (conference %in% c("SEC", "Big 12", "ACC", "Big Ten") | pos_team == "Notre Dame") ~ "P4",
+                season >= 2024 & (!is.na(conference) | (team_id %in% c("41", "113"))) ~ "G6", # UCONN and UMASS
                 season <= 2023 & !is.na(conference) & (conference %in% c("SEC", "Big 12", "ACC", "Big Ten", "Pac-12") | pos_team == "Notre Dame") ~ "P5",
                 season <= 2023 & (!is.na(conference) | (team_id %in% c("349", "41", "113"))) ~ "G5",
             )
@@ -629,6 +629,16 @@ for (yr in seasons) {
             )
         ) %>%
         dplyr::arrange(game_id, game_play_number)
+
+    if ("neutral_site.x" %in% colnames(plays)) {
+        plays <- plays %>%
+            dplyr::select(
+                -neutral_site.y
+            ) %>%
+            dplyr::rename(
+                neutral_site = neutral_site.x
+            )
+    }
 
     print(glue("Found {nrow(plays)} total FBS/FBS non-garbage-time plays, summarizing offensive data"))
 
