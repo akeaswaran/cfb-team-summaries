@@ -1,3 +1,4 @@
+devtools::install_github("sportsdataverse/cfbfastR")
 library(cfbfastR)
 library(dplyr)
 library(glue)
@@ -6,7 +7,7 @@ library(glmnet)
 library(janitor)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
-seasons <- 2014:max_season
+seasons <- 2024:2024#max_season
 all_teams = cfbfastR::load_cfb_teams()
 
 write_team_csvs <- function (data, team, yr, type) {
@@ -424,16 +425,18 @@ adjust_epa = function(plays) {
     x <- as.matrix(data.dummies[, -ncol(data.dummies)])
     y <- data.dummies$EPA
 
-    cv = glmnet::cv.glmnet(x, y, lambda = c(75,100,125,150,175,200,225,250,275,300,325))
-    target_lambda = cv$lambda[[1]]
+    # cv = glmnet::cv.glmnet(x, y, lambda = seq(5, 325, 25))
+    target_lambda = 175#cv$lambda[[1]]
+    print(glue::glue("Used Lambda Value: {target_lambda}"))
 
     ridge_model <- glmnet::glmnet(x, y, alpha = 0, lambda = target_lambda, intercept = T)
     ridge.coeff <- coef(ridge_model, s = target_lambda)
-
+    # browser()
     intercept <- ridge.coeff[1]
 
     pos_team_coeffs <- ridge.coeff[grep("^pos_team_id", rownames(ridge.coeff)), , drop = FALSE] + intercept
     def_pos_team_coeffs <- ridge.coeff[grep("^def_pos_team_id", rownames(ridge.coeff)), , drop = FALSE] + intercept
+    # browser()
 
     offense <- data.frame(
         team_id = rownames(pos_team_coeffs),
@@ -461,9 +464,9 @@ adjust_epa = function(plays) {
             def_pos_team = dplyr::last(def_pos_team),
             rawOffEPA = mean(EPA, na.rm = T)
         ) |>
-        left_join(defense, by = c("def_pos_team_id" = "team_id")) |>
-        mutate(adjOffEPA = rawOffEPA - adjmodelDef) |>
-        select(game_id, pos_team_id, pos_team, off_count = count, def_strength_faced = adjmodelDef, rawOffEPA, adjOffEPA) |>
+        left_join(offense, by = c("pos_team_id" = "team_id")) |>
+        # mutate(adjOffEPA = rawOffEPA - adjmodelDef) |>
+        select(game_id, pos_team_id, pos_team, off_count = count, rawOffEPA, adjOffEPA = adjmodelOff) |>
         ungroup()
 
     def_epa_game <- pbp.base |>
@@ -474,13 +477,14 @@ adjust_epa = function(plays) {
             def_pos_team = dplyr::last(def_pos_team),
             rawDefEPA = mean(EPA, na.rm = T)
         ) |>
-        left_join(offense, by = c("pos_team_id" = "team_id")) |>
-        mutate(adjDefEPA = rawDefEPA - adjmodelOff) |>
-        select(game_id, def_pos_team_id, def_pos_team, def_count = count, off_strength_faced = adjmodelOff, rawDefEPA, adjDefEPA) |>
+        left_join(defense, by = c("def_pos_team_id" = "team_id")) |>
+        # mutate(adjDefEPA = rawDefEPA - adjmodelOff) |>
+        select(game_id, def_pos_team_id, def_pos_team, def_count = count, rawDefEPA, adjDefEPA = adjmodelDef) |>
         ungroup()
 
     opp.adj <- off_epa_game |>
         left_join(def_epa_game, by = c("game_id", "pos_team_id" = "def_pos_team_id"))
+    browser()
 
     team.adj = opp.adj %>%
         dplyr::group_by(pos_team_id) %>%
@@ -538,7 +542,7 @@ for (yr in seasons) {
     plays <- plays %>%
         filter(
             ((pass == 1) | (rush == 1))
-            & !(game_id %in% c(401635537))
+            # & !(game_id %in% c(401635537))
             # ((wp_before >= 0.1) & (wp_before <= 0.9))
         ) %>%
         dplyr::left_join(schedules %>% dplyr::select(game_id, neutral_site, home_id, away_id), by = "game_id") %>%

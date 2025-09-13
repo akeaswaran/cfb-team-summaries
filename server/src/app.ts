@@ -12,7 +12,7 @@ import morgan from 'morgan';
 import { Percentile } from './interfaces/percentile';
 import fs from 'fs';
 
-const lastUpdated = fs.statSync("./data/2024/overall.csv")['mtime'];
+const lastUpdated = fs.statSync("./data/2025/overall.csv")['mtime'];
 
 function parseName(item: any, type: SummaryType): string {
     let key = 'name';
@@ -32,7 +32,7 @@ function parseAdvanced(item: any): AdvancedPlayerStats {
         epaPerPlay: item.EPAplay,
         epaPerGame: item.EPAgame,
         successRate: item.success,
-    
+
         totalEPARank: item.TEPA_rank,
         epaPerPlayRank: item.EPAplay_rank,
         epaPerGameRank: item.EPAgame_rank,
@@ -52,7 +52,7 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
         yards: item.yards,
         yardsPerPlay: item.yardsplay,
         yardsPerGame: item.yardsgame,
-    
+
         yardsRank: item.yards_rank,
         yardsPerPlayRank: item.yardsplay_rank,
         yardsPerGameRank: item.yardsgame_rank
@@ -67,7 +67,7 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
         (<PassingStats>stats).interceptions = item.pass_int;
         (<PassingStats>stats).detmer = item.detmer;
         (<PassingStats>stats).detmerPerGame = item.detmergame;
-    
+
         (<PassingStats>stats).completionPctRank = item.comppct_rank;
         (<PassingStats>stats).detmerRank = item.detmer_rank;
         (<PassingStats>stats).detmerPerGameRank = item.detmergame_rank;
@@ -87,7 +87,7 @@ function parseStats(item: any, type: SummaryType): PlayerStatistics {
         (<ReceivingStats>stats).catchPct = item.catchpct,
         (<ReceivingStats>stats).touchdowns = item.passing_td,
         (<ReceivingStats>stats).fumbles = item.fumbles,
-    
+
         (<ReceivingStats>stats).catchPctRank = item.catchpct_rank
     }
     Object.keys(stats).forEach(key => {
@@ -120,7 +120,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         yards: item.yards_off,
                         yardsPerPlay: item.yardsplay_off,
                         yardsPerGame: item.yardsgame_off,
-                        
+
                         playsPerGameRank: item.playsgame_off_rank,
                         totalEPARank: item.TEPA_off_rank,
                         epaPerPlayRank: item.EPAplay_off_rank,
@@ -178,7 +178,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_off_pass,
                         successRate: item.success_off_pass,
                         startingFP: item.start_position_off_pass,
-                        
+
                         playsPerGameRank: item.playsgame_off_pass_rank,
                         totalEPARank: item.TEPA_off_pass_rank,
                         epaPerPlayRank: item.EPAplay_off_pass_rank,
@@ -233,7 +233,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_off_rush,
                         successRate: item.success_off_rush,
                         startingFP: item.start_position_off_rush,
-                        
+
                         playsPerGameRank: item.playsgame_off_rush_rank,
                         totalEPARank: item.TEPA_off_rush_rank,
                         epaPerPlayRank: item.EPAplay_off_rush_rank,
@@ -289,7 +289,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_def,
                         successRate: item.success_def,
                         startingFP: item.start_position_def,
-                        
+
                         playsPerGameRank: item.playsgame_def_rank,
                         totalEPARank: item.TEPA_def_rank,
                         epaPerPlayRank: item.EPAplay_def_rank,
@@ -351,7 +351,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_def_pass,
                         successRate: item.success_def_pass,
                         startingFP: item.start_position_def_pass,
-                        
+
                         playsPerGameRank: item.playsgame_def_pass_rank,
                         totalEPARank: item.TEPA_def_pass_rank,
                         epaPerPlayRank: item.EPAplay_def_pass_rank,
@@ -406,7 +406,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_def_rush,
                         successRate: item.success_def_rush,
                         startingFP: item.start_position_def_rush,
-                        
+
                         playsPerGameRank: item.playsgame_def_rush_rank,
                         totalEPARank: item.TEPA_def_rush_rank,
                         epaPerPlayRank: item.EPAplay_def_rush_rank,
@@ -495,7 +495,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_margin_pass,
                         successRate: item.success_margin_pass,
                         startingFP: item.start_position_margin_pass,
-                        
+
                         totalEPARank: item.TEPA_margin_pass_rank,
                         epaPerPlayRank: item.EPAplay_margin_pass_rank,
                         adjEpaPerPlayRank: item.net_adj_epa_rank,
@@ -521,7 +521,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
                         epaPerGame: item.EPAgame_margin_rush,
                         successRate: item.success_margin_rush,
                         startingFP: item.start_position_margin_rush,
-                        
+
                         totalEPARank: item.TEPA_margin_rush_rank,
                         epaPerPlayRank: item.EPAplay_margin_rush_rank,
                         adjEpaPerPlayRank: item.net_adj_epa_rank,
@@ -584,7 +584,7 @@ async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
 
     console.log(`Looking for data at file path: ${fileName}`)
     const content = await csvtojson().fromFile(fileName);
-    
+
     return parseSummary(content, params.type ?? SummaryType.Overall);
 }
 
@@ -592,7 +592,7 @@ async function retrievePercentiles(year: number): Promise<Percentile[]> {
     const fileName: string = `./data/${year}/percentiles.csv`
     console.log(`Looking for percentiles data at file path: ${fileName}`)
     const content = await csvtojson().fromFile(fileName);
-    
+
     return parsePercentiles(year, content);
 }
 
@@ -609,11 +609,11 @@ function parsePercentiles(year: number, content: any[]): Percentile[] {
             epaPerDropback: parseFloat(item.EPAdropback), // EPAdropback
             epaPerRush: parseFloat(item.EPArush), // EPArush
             yardsPerDropback: parseFloat(item.yardsdropback), // yardsdropback
-        
+
             explosivePlayRate: parseFloat(item.explosive), //explosive
             thirdDownSuccessRate: parseFloat(item.third_down_success), // third_down_success
             redZoneSuccessRate: parseFloat(item.red_zone_success), // red_zone_success
-        
+
             playStuffedRate: parseFloat(item.play_stuffed), // play_stuffed
             havocRate: parseFloat(item.havoc), //havoc
         };
@@ -624,7 +624,7 @@ function parsePercentiles(year: number, content: any[]): Percentile[] {
     });
     return result;
 }
- 
+
 // Initialize the express engine
 const app: express.Application = express();
 app.use(morgan('[summaries] :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'));
@@ -667,7 +667,7 @@ app.post('/', async (req, res, next) => {
     if (!body.year) {
         return res.status(400).json({
             error: 'Did not provide required param `year`'
-        })    
+        })
     }
 
     const parsedBody: SummaryRequest = body;
