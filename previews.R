@@ -823,7 +823,7 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
 # fire off at 0.5 min intervals
 is_live_run = Sys.getenv("SKEET_ENVIRONMENT") == "prod"
 reply = NULL
-delay = dplyr::if_else(is_live_run, 10, 5)
+delay = dplyr::if_else(is_live_run, 30, 5)
 if (nrow(selected_games) > 0) {
     print(paste0("Skeeting for relevant FBS games: ", nrow(selected_games), " - live_run: ", is_live_run))
     for (i in 1:(nrow(selected_games))) {
