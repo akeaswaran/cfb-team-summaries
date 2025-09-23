@@ -176,7 +176,7 @@ def apply_ridge_regression(pbp: pd.DataFrame) -> pd.DataFrame:
 
     # final formatting and output
     print(f"Adding adjusted ranks for {len(dfTeam)} teams")
-    dfTeam = dfTeam.round(3) # round adjusted value to thousandths
+    # dfTeam = dfTeam.round(3) # round adjusted value to thousandths
     dfTeam["netAdjEPA"] = dfTeam["adjOffEPA"] - dfTeam["adjDefEPA"]
     dfTeam["adjOffEPA_rank"] = dfTeam.adjOffEPA.rank(method="dense", ascending=False)
     dfTeam["adjDefEPA_rank"] = dfTeam.adjDefEPA.rank(method="dense", ascending=True)

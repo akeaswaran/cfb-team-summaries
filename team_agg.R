@@ -2,7 +2,6 @@ library(cfbfastR)
 library(dplyr)
 library(glue)
 library(stringr)
-# library(glmnet)
 library(janitor)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
@@ -39,7 +38,7 @@ summarize_passer_df <- function(x) {
             EPAgame = TEPA / games,
 
             # yards
-            yards = sum(yds_receiving, na.rm = TRUE),
+            yards = sum(yards_gained, na.rm = TRUE),
             yardsplay = yards / plays,
             yardsgame = yards / games,
 
@@ -83,7 +82,7 @@ summarize_receiver_df <- function(x) {
             EPAgame = TEPA / games,
 
             # yards
-            yards = sum(yds_receiving, na.rm = TRUE),
+            yards = sum(yards_gained, na.rm = TRUE),
             yardsplay = yards / plays,
             yardsgame = yards / games,
 
