@@ -188,3 +188,7 @@ server/build
 
 data/
 **/.DS_Store
+
+*.RDS
+*.ipynb
+.venv

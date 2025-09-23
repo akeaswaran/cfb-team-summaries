@@ -6,3 +6,6 @@
 *.sh
 *.png
 gt_graphics.R
+*.RDS
+*.ipynb
+.venv
