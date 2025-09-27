@@ -19,8 +19,8 @@ def retrieve_pbp(year: int) -> pd.DataFrame:
     pbp = pbp24[
         (pbp24.home_team_division == "fbs")
         & (pbp24.away_team_division == "fbs")
-        & (pbp24.home_wp_before >= 0.1)
-        & (pbp24.home_wp_before <= 0.9)
+        & (pbp24.home_wp_before >= 0.2)
+        & (pbp24.home_wp_before <= 0.8)
         & (pbp24.EPA.notna())
     ]
     print(f"found {len(pbp)} relevant plays, adding necessary vars")
