@@ -739,7 +739,7 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
     print(paste0("generating skeet for game ", row$game_id, " - reply? ", !is.null(reply), ", live_run: ", live_run))
 
     print(paste0("generating skeet image data..."))
-    img_data = generate_matchup_image(row$game_id[1], row$home_team_id[1], row$away_team_id[1], 2024)
+    img_data = generate_matchup_image(row$game_id[1], row$home_team_id[1], row$away_team_id[1], 2025)
 
     print(paste0("generating skeet content..."))
     home_team_title = dplyr::if_else(is.na(row$home_team_rank), row$home_team_location, paste0("#", row$home_team_rank, " ", row$home_team_location))
