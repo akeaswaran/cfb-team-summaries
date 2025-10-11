@@ -1,5 +1,7 @@
 name: Skeet Game Previews
 
+concurrency: "1"
+
 on:
   schedule:
     - cron: "0 15 * 9-11 6" # run 10am on Sat from Sept-Nov (normal)
