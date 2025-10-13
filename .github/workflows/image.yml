@@ -38,7 +38,7 @@ jobs:
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.GP_TRIGGER_TOKEN }}
+          token: ${{ secrets.GP_TRIGGER_KEY }}
           repository: saiemgilani/game-on-paper-app
           event-type: deploy
           client-payload: '{"ref": "main"}'
