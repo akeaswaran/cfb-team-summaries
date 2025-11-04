@@ -172,7 +172,10 @@ clean_team_data = function(df) {
             year_constructed
         )) %>%
         dplyr::mutate(
-            logo = dplyr::if_else(pos_team == "Georgia", "https://raw.githubusercontent.com/saiemgilani/game-on-paper-app/main/frontend/public/assets/img/ennui-uga.png", logo),
+            logo = dplyr::case_when(
+                pos_team == "Georgia" ~ "https://raw.githubusercontent.com/saiemgilani/game-on-paper-app/main/frontend/public/assets/img/ennui-uga.png",
+                .default = logo
+            ),
             pos_team = dplyr::if_else(pos_team == "Georgia", "georgia", pos_team),
             side = dplyr::case_when(
                 grepl("_off", name) | grepl("off_", name) ~ "off",
@@ -548,7 +551,6 @@ generate_matchup_image = function(game_id, home_id, away_id, season_override = N
 
                 .default = paste0(round(home_off_value, 2))
             ),
-            # dplyr::across(dplyr::contains("_logo_") ~ dplyr::if_else(stringr::str_detect(.x, "61.png"), "https://raw.githubusercontent.com/saiemgilani/game-on-paper-app/main/frontend/public/assets/img/ennui-uga.png", .x),
             dplyr::across(dplyr::contains("_logo_"), ~ paste0('<img style="margin-bottom: 0; vertical-align: middle;" width="35px" src="',.x,'"/>'))
         ) %>%
         dplyr::relocate(dplyr::starts_with("away_")) %>%
@@ -740,6 +742,13 @@ fire_skeet = function(row, reply = NULL, live_run = FALSE) {
 
     print(paste0("generating skeet image data..."))
     img_data = generate_matchup_image(row$game_id[1], row$home_team_id[1], row$away_team_id[1], 2025)
+    if (row$home_team_id == 61) {
+        row$home_team_location = tolower(row$home_team_location)
+    }
+
+    if (row$away_team_id == 61) {
+        row$away_team_location = tolower(row$away_team_location)
+    }
 
     print(paste0("generating skeet content..."))
     home_team_title = dplyr::if_else(is.na(row$home_team_rank), row$home_team_location, paste0("#", row$home_team_rank, " ", row$home_team_location))
