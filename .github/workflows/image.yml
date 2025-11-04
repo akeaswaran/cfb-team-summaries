@@ -3,10 +3,12 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-        - main
+      - main
   schedule:
     - cron: "0 0 * 8-12 1"
     - cron: "0 0 * 1 1"
+  repository_dispatch:
+    types: [deploy]
   workflow_dispatch:
 
 jobs:
@@ -33,3 +35,10 @@ jobs:
           push: true
           secrets: |
             "CFBD_API_KEY=${{ secrets.CFBD_API_KEY }}"
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GP_TRIGGER_KEY }}
+          repository: saiemgilani/game-on-paper-app
+          event-type: deploy
+          client-payload: '{"ref": "main"}'

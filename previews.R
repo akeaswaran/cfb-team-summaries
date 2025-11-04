@@ -447,7 +447,7 @@ skeet = function (text, images, images_alt, video, video_alt, langs,
                              external = tenor_gif)
             }
             else {
-                link_card <- bskyr:::parse_first_link(text)
+                link_card <- bskyr:::parse_first_link(text, auth = auth)
                 if (!is.null(link_card)) {
                     card <- list(`$type` = "app.bsky.embed.external",
                                  external = link_card)

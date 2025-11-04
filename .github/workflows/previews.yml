@@ -1,12 +1,14 @@
 name: Skeet Game Previews
 
+concurrency: "1"
+
 on:
   schedule:
-    - cron: "0 15 * 9-11 6" # run 10am on Sat from Sept-Nov (normal)
-    - cron: "0 23 * 9-11 1-5" # run 6pm on non-Sat/Sun from Sept-Nov (MACtion, ACC, Black Friday)
-    - cron: "0 15 * 12 *" # run at 10am every day in December (bowls)
-    # - cron: "0 15 1-16 1 *" # run at 10am every day from Jan 1-16 (playoff)
-    # - cron: "0 15 20-31 8 *" # run at 10am every day from Aug 20-31 (Week 0)
+    - cron: "0 14 * 9-11 6" # run 10am on Sat from Sept-Nov (normal)
+    - cron: "0 22 * 9-11 1-5" # run 6pm on non-Sat/Sun from Sept-Nov (MACtion, ACC, Black Friday)
+    - cron: "0 14 * 12 *" # run at 10am every day in December (bowls)
+    # - cron: "0 14 1-16 1 *" # run at 10am every day from Jan 1-16 (playoff)
+    # - cron: "0 14 20-31 8 *" # run at 10am every day from Aug 20-31 (Week 0)
   workflow_dispatch:
 
 jobs:
