@@ -12,7 +12,7 @@ import morgan from 'morgan';
 import { Percentile } from './interfaces/percentile';
 import fs from 'fs';
 
-const lastUpdated = fs.statSync("./data/2024/overall.csv")['mtime'];
+const lastUpdated = fs.statSync("./data/2025/overall.csv")['mtime'];
 
 function parseName(item: any, type: SummaryType): string {
     let key = 'name';
