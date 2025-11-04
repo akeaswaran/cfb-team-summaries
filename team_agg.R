@@ -309,18 +309,18 @@ clean_columns <- function (x) {
     return(x %>% rename_at(all_of(old_columns), ~ new_columns))
 }
 
-prepare_for_write <- function(x, yr) {
+prepare_for_write <- function(x, yr, schools) {
     # browser()
     tmp <- x %>%
         clean_columns() %>%
         dplyr::mutate(
             season = yr
         ) %>%
-        left_join(valid_fbs_teams, by = c('pos_team_id' = "team_id")) %>%
+        dplyr::left_join(schools, by = "pos_team_id") %>%
         select(
             team_id = pos_team_id,
-            pos_team = school,
-            abbreviation,
+            pos_team,
+            conference = pos_team_conference,
             season,
             dplyr::everything()
         ) %>%
@@ -397,9 +397,7 @@ adjust_epa = function(plays) {
 
     pbp.clean <- pbp.base |>
         filter(
-            (pos_team_id %in% valid_fbs_teams$team_id)
-            & (def_pos_team_id %in% valid_fbs_teams$team_id)
-            & (wp_before >= 0.1) & (wp_before <= 0.9) # remove garbage time, no vegas spread included in this WP Model
+            (wp_before >= 0.1) & (wp_before <= 0.9) # remove garbage time, no vegas spread included in this WP Model
         ) |>
         group_by(game_id) |>
         mutate(hfa = dplyr::case_when(
@@ -493,8 +491,7 @@ adjust_epa = function(plays) {
             dplyr::across(dplyr::where(is.numeric), ~ dplyr::if_else(is.nan(.x), NA_real_, .x))
         ) %>%
         dplyr::filter(
-            pos_team_id %in% valid_fbs_teams$team_id
-            & !is.na(adjOffEPA)
+            !is.na(adjOffEPA)
             & !is.na(adjDefEPA)
             & valid_games >= 2
         )
@@ -757,7 +754,7 @@ for (yr in seasons) {
         ) %>%
         dplyr::select(
             pos_team_id,
-            rusher_player_name,
+            rush_player_id,
             TEPA_rank,
             EPAgame_rank,
             EPAplay_rank,
@@ -769,7 +766,7 @@ for (yr in seasons) {
         )
 
     team_rb_data = team_rb_data %>%
-        dplyr::left_join(team_rb_ranks, by = c("pos_team_id", "rusher_player_name"))
+        dplyr::left_join(team_rb_ranks, by = c("pos_team_id", "rush_player_id"))
 
     team_wr_data <- plays %>%
         dplyr::mutate(
@@ -782,7 +779,7 @@ for (yr in seasons) {
                 !is.na(target_player_id) ~ target_player,
             )
         ) %>%
-        filter((pass == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_name) & (nchar(trim(receiver_player_name)) > 0) & !(receiver_player_name %in% c("TEAM", "Team", "#")) & !is.na(receiver_player_id)) %>%
+        filter((pass == 1) & !is.na(EPA) & !is.na(success) & !is.na(epa_success) & !is.na(receiver_player_id)) %>%
         group_by(pos_team_id) %>%
         dplyr::mutate(
             team_games = length(unique(game_id))
@@ -809,7 +806,7 @@ for (yr in seasons) {
         ) %>%
         dplyr::select(
             pos_team_id,
-            receiver_player_name,
+            receiver_player_id,
             TEPA_rank,
             EPAgame_rank,
             EPAplay_rank,
@@ -822,13 +819,10 @@ for (yr in seasons) {
         )
 
     team_wr_data = team_wr_data %>%
-        dplyr::left_join(team_wr_ranks, by = c("pos_team_id", "receiver_player_name"))
+        dplyr::left_join(team_wr_ranks, by = c("pos_team_id", "receiver_player_id"))
 
 
     team_off_pass_data <- plays %>%
-        filter(
-            pos_team_id %in% valid_fbs_teams$team_id
-        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
         group_by(pos_team_id) %>%
         summarize_team_df(remove_cols = c(
@@ -836,9 +830,6 @@ for (yr in seasons) {
         ))
 
     team_off_rush_data <- plays %>%
-        filter(
-            pos_team_id %in% valid_fbs_teams$team_id
-        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
         group_by(pos_team_id) %>%
         summarize_team_df(remove_cols = c(
@@ -848,17 +839,11 @@ for (yr in seasons) {
     print(glue("Summarizing defensive data"))
 
     team_def_data <- plays %>%
-        filter(
-            def_pos_team_id %in% valid_fbs_teams$team_id
-        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success)) %>%
         group_by(def_pos_team_id) %>%
         summarize_team_df(ascending = TRUE)
 
     team_def_drives_data <- plays %>%
-        filter(
-            def_pos_team_id %in% valid_fbs_teams$team_id
-        ) %>%
         filter(!is.na(drive_id)) %>%
         group_by(def_pos_team_id, drive_id) %>%
         summarize(
@@ -878,9 +863,6 @@ for (yr in seasons) {
         )
 
     team_def_pass_data <- plays %>%
-        filter(
-            def_pos_team_id %in% valid_fbs_teams$team_id
-        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (pass == 1)) %>%
         group_by(def_pos_team_id) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
@@ -888,9 +870,6 @@ for (yr in seasons) {
         ))
 
     team_def_rush_data <- plays %>%
-        filter(
-            def_pos_team_id %in% valid_fbs_teams$team_id
-        ) %>%
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success) & (rush == 1)) %>%
         group_by(def_pos_team_id) %>%
         summarize_team_df(ascending = TRUE, remove_cols = c(
@@ -930,18 +909,27 @@ for (yr in seasons) {
 
     print(glue("Generating year and team CSVs..."))
 
+    schools = plays %>%
+        dplyr::mutate(
+            pos_team_division = dplyr::if_else(home_team_id == pos_team_id, home_team_division, away_team_division),
+            pos_team_conference = dplyr::if_else(home_team_id == pos_team_id, home_team_conference, away_team_conference)
+        ) %>%
+        dplyr::distinct(pos_team_id, .keep_all = T) %>%
+        dplyr::select(pos_team_id, pos_team, pos_team_division, pos_team_conference) %>%
+        dplyr::arrange(pos_team_id)
+
     team_data <- team_data %>%
-        prepare_for_write(yr) %>%
+        prepare_for_write(yr, schools) %>%
         dplyr::left_join(adj_EPA_df %>% dplyr::select(-pos_team), by = c("team_id"))
 
     team_qb_data <- team_qb_data %>%
-        prepare_for_write(yr)
+        prepare_for_write(yr, schools)
 
     team_rb_data <- team_rb_data %>%
-        prepare_for_write(yr)
+        prepare_for_write(yr, schools)
 
     team_wr_data <- team_wr_data %>%
-        prepare_for_write(yr)
+        prepare_for_write(yr, schools)
 
     print(glue("Creating folder /data/ if necessary"))
     dir.create(file.path('./data', ""), showWarnings = FALSE)
