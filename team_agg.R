@@ -924,13 +924,22 @@ for (yr in seasons) {
         dplyr::left_join(adj_EPA_df %>% dplyr::select(-pos_team), by = c("team_id"))
 
     team_qb_data <- team_qb_data %>%
-        prepare_for_write(yr, schools)
+        prepare_for_write(yr, schools) %>%
+        dplyr::rename(
+            player_id = passer_player_id,
+        )
 
     team_rb_data <- team_rb_data %>%
-        prepare_for_write(yr, schools)
+        prepare_for_write(yr, schools) %>%
+        dplyr::rename(
+            player_id = rush_player_id
+        )
 
     team_wr_data <- team_wr_data %>%
-        prepare_for_write(yr, schools)
+        prepare_for_write(yr, schools) %>%
+        dplyr::rename(
+            player_id receiver_player_id
+        )
 
     print(glue("Creating folder /data/ if necessary"))
     dir.create(file.path('./data', ""), showWarnings = FALSE)
