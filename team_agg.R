@@ -6,7 +6,7 @@ library(glmnet)
 library(janitor)
 
 max_season <- cfbfastR:::most_recent_cfb_season()
-seasons <- c(max_season) #2014:max_season
+seasons <- 2014:max_season
 
 write_team_csvs <- function (data, team, yr, type) {
     print(glue("Creating folder /data/{yr}/{team} if necessary"))
