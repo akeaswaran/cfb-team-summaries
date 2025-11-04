@@ -716,14 +716,47 @@ generate_matchup_image = function(game_id, home_id, away_id, season_override = N
             ),
             .before = 0
         ) %>%
-        dplyr::rename_with(~matchup_df$away_team[[1]], away_text) %>%
-        dplyr::rename_with(~matchup_df$home_team[[1]], home_text) %>%
+        dplyr::rename_with(~paste0(matchup_df$away_team[[1]], " Offense"), away_text) %>%
+        dplyr::rename_with(~paste0(matchup_df$home_team[[1]], " Defense"), home_text) %>%
+        readr::format_tsv()
+
+    alt_text2 = matchup_df %>%
+        dplyr::arrange(name) %>%
+        dplyr::select(
+            away_def_rank_text,
+            away_def_rank,
+            away_def_value_text,
+            title,
+            home_off_value_text,
+            home_off_rank,
+            home_off_rank_text,
+        ) %>%
+        dplyr::mutate(
+            home_text = paste0(home_off_value_text, " (", home_off_rank_text,")"),
+            away_text = paste0(away_def_value_text, " (", away_def_rank_text,")"),
+            title = stringr::str_trim(title)
+        ) %>%
+        dplyr::select(
+            away_text,
+            metric = title,
+            home_text
+        ) %>%
+        dplyr::add_row(
+            data.frame(
+                "away_text" = "-----",
+                "metric" = "-----",
+                "home_text" = "-----"
+            ),
+            .before = 0
+        ) %>%
+        dplyr::rename_with(~paste0(matchup_df$away_team[[1]], " Defense"), away_text) %>%
+        dplyr::rename_with(~paste0(matchup_df$home_team[[1]], " Offense"), home_text) %>%
         readr::format_tsv()
 
     return(
         list(
             "file_path" = file_path,
-            "alt_text" = alt_text
+            "alt_text" = paste0(alt_text,"\n\n", alt_text2)
         )
     )
 }
