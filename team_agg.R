@@ -938,7 +938,7 @@ for (yr in seasons) {
     team_wr_data <- team_wr_data %>%
         prepare_for_write(yr, schools) %>%
         dplyr::rename(
-            player_id receiver_player_id
+            player_id = receiver_player_id
         )
 
     print(glue("Creating folder /data/ if necessary"))
