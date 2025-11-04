@@ -157,24 +157,15 @@ clean_team_data = function(df) {
         ) %>%
         tidyr::pivot_longer(cols = -c(
             dplyr::where(is.character),
+            team_id,
             season,
-            dplyr::contains("alt_"),
             division,
             fbs_class,
-            venue_id,
-            zip,
-            latitude,
-            longitude,
-            grass,
-            dome,
-            elevation,
-            capacity,
-            year_constructed
         )) %>%
         dplyr::mutate(
             logo = dplyr::case_when(
                 pos_team == "Georgia" ~ "https://raw.githubusercontent.com/saiemgilani/game-on-paper-app/main/frontend/public/assets/img/ennui-uga.png",
-                .default = logo
+                .default = paste0("https://a.espncdn.com/i/teamlogos/ncaa/500/", team_id, ".png")
             ),
             pos_team = dplyr::if_else(pos_team == "Georgia", "georgia", pos_team),
             side = dplyr::case_when(

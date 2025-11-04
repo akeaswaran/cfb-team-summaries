@@ -320,6 +320,7 @@ prepare_for_write <- function(x, yr, schools) {
         select(
             team_id = pos_team_id,
             pos_team,
+            division = pos_team_division,
             conference = pos_team_conference,
             season,
             dplyr::everything()
