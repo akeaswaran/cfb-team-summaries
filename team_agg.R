@@ -23,7 +23,7 @@ summarize_passer_df <- function(x) {
         # ) %>%
         summarize(
             # player_id = dplyr::first(na.omit(passer_player_id)),
-            player_name = dplyr::first(passer_player_name),
+            passer_player_name = dplyr::first(passer_player_name),
             plays = n(),
             games = length(unique(game_id)),
             team_games = dplyr::last(team_games),
@@ -105,7 +105,7 @@ summarize_rusher_df <- function(x) {
         # ) %>%
         summarize(
             # player_id = dplyr::first(na.omit(rush_player_id)),
-            rush_player_name = dplyr::first(rusher_player_name),
+            rusher_player_name = dplyr::first(rusher_player_name),
             plays = n(),
             games = length(unique(game_id)),
             team_games = dplyr::last(team_games),
