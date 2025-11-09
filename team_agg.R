@@ -69,7 +69,7 @@ summarize_receiver_df <- function(x) {
         summarize(
             receiver_player_name = dplyr::first(receiver_player_name),
             # player_id = dplyr::first(na.omit(target_player_id)),
-            plays = n(),
+            plays = dplyr::n(),
             games = length(unique(game_id)),
             team_games = dplyr::last(team_games),
             playsgame = plays / games,
@@ -87,7 +87,7 @@ summarize_receiver_df <- function(x) {
             # SR
             success = mean(epa_success),
             comp = sum(!is.na(reception_player_id)),
-            targets = sum(!is.na(target_player_id)),
+            targets = sum(!is.na(target_player_id) | !is.na(reception_player_id)),
             catchpct = comp / targets,
 
             passing_td = sum(pass_td),
