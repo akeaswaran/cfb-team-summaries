@@ -176,7 +176,7 @@ save_crop_gt(net_stats_graphic, "25playoff.png")
 
 
 bubble_graphic = team.adj %>%
-    dplyr::left_join(seeds, by = "pos_team") %>%
+    dplyr::left_join(bubble_teams, by = "pos_team") %>%
     dplyr::arrange(dplyr::desc(net_adj_epa)) %>%
     dplyr::mutate(
         `#` = dplyr::row_number(),
@@ -277,4 +277,4 @@ bubble_graphic = team.adj %>%
     gt::tab_footnote(gt::html("🏆 - Conference champion<br/>Data via ESPN, collegefootballdata.com, cfbfastR, and @gameonpaper.com. Table created with help from cbbdata by Andrew Weatherman (@aweatherman.com).<br/>Visit https://gameonpaper.com for more CFB advanced stats."))
 
 
-save_crop_gt(net_stats_graphic, "25playoff.png")
+save_crop_gt(bubble_graphic, "25playoff-bubble.png")
