@@ -535,6 +535,27 @@ for (yr in seasons) {
             # ((wp_before >= 0.1) & (wp_before <= 0.9))
         ) %>%
         mutate(
+            kneel_down = dplyr::case_when(
+                (pass == 1) ~ F,
+                stringr::str_detect(play_text, "\s?kneel-down\s?") ~ T,
+                stringr::str_detect(play_text, "\s?kneel down\s?") ~ T,
+                stringr::str_detect(play_text, "\s?kneel\s?") ~ T,
+                stringr::str_detect(play_text, "\s?takes a knee\s?") ~ T,
+                # if they're marked as TEAM rushes for -1,-2 within the last minute of a half, it's probably a kneel
+                (
+                    (
+                        ((adj_TimeSecsRem <= 1860) & (adj_TimeSecsRem >= 1800))
+                        | ((adj_TimeSecsRem <= 60) & (adj_TimeSecsRem >= 0))
+                    )
+                    & (
+                        stringr::str_detect(play_text, "^team run for a loss of 1 yard")
+                        | stringr::str_detect(play_text, "^team run for a loss of 1 yard")
+                    )
+                )
+            )
+        ) %>%
+        dplyr::filter(kneel_down == F) %>%
+        mutate(
             pos_team_id = dplyr::case_when(
                 pos_team == home ~ home_id,
                 pos_team == away ~ away_id,
