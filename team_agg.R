@@ -537,10 +537,10 @@ for (yr in seasons) {
         mutate(
             kneel_down = dplyr::case_when(
                 (pass == 1) ~ F,
-                stringr::str_detect(play_text, "\s?kneel-down\s?") ~ T,
-                stringr::str_detect(play_text, "\s?kneel down\s?") ~ T,
-                stringr::str_detect(play_text, "\s?kneel\s?") ~ T,
-                stringr::str_detect(play_text, "\s?takes a knee\s?") ~ T,
+                stringr::str_detect(play_text, "\\s?kneel-down\\s?") ~ T,
+                stringr::str_detect(play_text, "\\s?kneel down\\s?") ~ T,
+                stringr::str_detect(play_text, "\\s?kneel\\s?") ~ T,
+                stringr::str_detect(play_text, "\\s?takes a knee\\s?") ~ T,
                 # if they're marked as TEAM rushes for -1,-2 within the last minute of a half, it's probably a kneel
                 (
                     (
