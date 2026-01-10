@@ -551,7 +551,8 @@ for (yr in seasons) {
                         stringr::str_detect(play_text, "^team run for a loss of 1 yard")
                         | stringr::str_detect(play_text, "^team run for a loss of 1 yard")
                     )
-                ) ~ T
+                ) ~ T,
+                .default = F
             )
         ) %>%
         dplyr::filter(kneel_down == F) %>%
