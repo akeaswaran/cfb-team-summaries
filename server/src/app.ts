@@ -11,8 +11,41 @@ import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import { Percentile } from './interfaces/percentile';
 import fs from 'fs';
+import { globSync } from 'glob';
 
 const lastUpdated = fs.statSync("./data/2025/overall.csv")['mtime'];
+
+function generateTeamYearMap(): Map<string, number[]> {
+    try {
+        const filePaths = globSync("./data/**/*", { ignore: "./data/**/*.csv" });
+
+        let result = new Map<string, number[]>();
+        for (const f of filePaths) {
+            // console.log(f)
+            const yearMatches = f.replace("data/", "").match(/^(\d+)/g) ?? [];
+            // console.log(yearMatches)
+            const teamIdMatches = f.match(/(\d+)$/g) ?? [];
+            // console.log(teamIdMatches)
+
+            if (yearMatches.length > 0 && teamIdMatches.length > 0) {
+                const year = parseInt(String(yearMatches[0]))
+                const teamId = String(teamIdMatches[0])
+                console.log(`Adding ${year} to ${teamId}`);
+                result.set(
+                    teamId,
+                    (result.get(teamId) ?? []).concat([year])
+                )
+            }
+        }
+        return result;
+    } catch (e) {
+        console.log(`Error while assembling year map: ${e}`);
+        return new Map<string, number[]>();
+    }
+}
+
+const AVAILABLE_TEAM_YEAR_MAP = generateTeamYearMap();
+console.log(AVAILABLE_TEAM_YEAR_MAP);
 
 function parseName(item: any, type: SummaryType): string {
     let key = 'name';
@@ -575,7 +608,7 @@ function parseSummary(content: any[], type: SummaryType): Summary[] {
     return result;
 }
 
-async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
+async function retrieveFileContents(params: SummaryRequest): Promise<Summary[]> {
     let fileName: string = `./data/${params.year}/`
     if (params.team) {
         fileName += `${params.team}/`
@@ -584,8 +617,23 @@ async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
 
     console.log(`Looking for data at file path: ${fileName}`)
     const content = await csvtojson().fromFile(fileName);
-    
     return parseSummary(content, params.type ?? SummaryType.Overall);
+}
+
+async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
+    if (params.year) {
+        return retrieveFileContents(params);
+    } else if (params.team) {
+        const availableYears = AVAILABLE_TEAM_YEAR_MAP.get(params.team) ?? [];
+        let results: Summary[] = [];
+        for (const yr of availableYears) {
+            const yrFiles = await retrieveFileContents({ year: yr, team: params.team, type: params.type ?? SummaryType.Overall })
+            results = results.concat(yrFiles)
+        }
+        return results;
+    }
+    
+    throw new Error("Invalid request: no team or year provided")
 }
 
 async function retrievePercentiles(year: number): Promise<Percentile[]> {
@@ -664,10 +712,10 @@ app.post('/', async (req, res, next) => {
             error: 'No POST body sent'
         })
     }
-    if (!body.year) {
+    if (!body.year && !body.team) {
         return res.status(400).json({
-            error: 'Did not provide required param `year`'
-        })    
+            error: 'Invalid POST body, must provide `year` AND/OR `team`.'
+        })
     }
 
     const parsedBody: SummaryRequest = body;

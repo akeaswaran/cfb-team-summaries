@@ -3,7 +3,7 @@ import { TeamSummary } from "./overall-summary"
 import { PlayerSummary } from "./player-summary"
 
 export interface SummaryRequest {
-    year: number
+    year?: number
     team?: string
     type?: SummaryType
 }

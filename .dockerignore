@@ -6,3 +6,5 @@
 *.sh
 *.png
 gt_graphics.R
+trends.R
+figures
