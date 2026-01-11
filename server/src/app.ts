@@ -5,7 +5,7 @@ import process from 'process';
 import csvtojson from 'csvtojson';
 import { TeamSummary } from './interfaces/overall-summary';
 import { SummaryType } from './enums/summary-types';
-import { Summary, SummaryRequest } from './interfaces/request';
+import { PercentileRequest, Summary, SummaryRequest } from './interfaces/request';
 import { PassingStats, PlayerStatistics, PlayerSummary, ReceivingStats, RushingStats, AdvancedPlayerStats } from './interfaces/player-summary';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
@@ -15,11 +15,12 @@ import { globSync } from 'glob';
 
 const lastUpdated = fs.statSync("./data/2025/overall.csv")['mtime'];
 
-function generateTeamYearMap(): Map<string, number[]> {
+function generateTeamYearMap(): [Map<string, number[]>, number[]] {
     try {
         const filePaths = globSync("./data/**/*", { ignore: "./data/**/*.csv" });
 
         let result = new Map<string, number[]>();
+        let years: number[] = [];
         for (const f of filePaths) {
             // console.log(f)
             const yearMatches = f.replace("data/", "").match(/^(\d+)/g) ?? [];
@@ -30,21 +31,24 @@ function generateTeamYearMap(): Map<string, number[]> {
             if (yearMatches.length > 0 && teamIdMatches.length > 0) {
                 const year = parseInt(String(yearMatches[0]))
                 const teamId = String(teamIdMatches[0])
-                console.log(`Adding ${year} to ${teamId}`);
+                // console.log(`Adding ${year} to ${teamId}`);
                 result.set(
                     teamId,
                     (result.get(teamId) ?? []).concat([year])
                 )
+                if (!years.includes(year)) {
+                    years.push(year);
+                }
             }
         }
-        return result;
+        return [result, years];
     } catch (e) {
         console.log(`Error while assembling year map: ${e}`);
-        return new Map<string, number[]>();
+        return [new Map<string, number[]>(), []];
     }
 }
 
-const AVAILABLE_TEAM_YEAR_MAP = generateTeamYearMap();
+const [AVAILABLE_TEAM_YEAR_MAP, AVAILABLE_YEARS] = generateTeamYearMap();
 console.log(AVAILABLE_TEAM_YEAR_MAP);
 
 function parseName(item: any, type: SummaryType): string {
@@ -636,12 +640,32 @@ async function retrieveSummaryData(params: SummaryRequest): Promise<Summary[]> {
     throw new Error("Invalid request: no team or year provided")
 }
 
-async function retrievePercentiles(year: number): Promise<Percentile[]> {
+async function retrievePercentileContents(year: number): Promise<Percentile[]> {
     const fileName: string = `./data/${year}/percentiles.csv`
     console.log(`Looking for percentiles data at file path: ${fileName}`)
     const content = await csvtojson().fromFile(fileName);
     
     return parsePercentiles(year, content);
+}
+
+async function retrievePercentiles(query: PercentileRequest): Promise<Percentile[]> {
+    if (query.year) {
+        const result = await retrievePercentileContents(query.year);
+        if (query.pctile) {
+            return result.filter(y => y.pctile == query.pctile);
+        } else {
+            return result;
+        }
+    } else if (query.pctile) {
+        let results: Percentile[] = [];
+        for (const yr of AVAILABLE_YEARS) {
+            const yrFiles = await retrievePercentileContents(yr)
+            results = results.concat(yrFiles.filter(y => y.pctile == query.pctile))
+        }
+        return results;
+    }
+
+    throw new Error("Invalid request: no year or percentile value provided")
 }
 
 function parsePercentiles(year: number, content: any[]): Percentile[] {
@@ -691,9 +715,26 @@ app.get('/health', (_req, _res) => {
 });
 
 app.get('/percentiles/:year', async (req, res, next) => {
-    console.debug('Received GET percentiles request with params ' + JSON.stringify(req.params));
+    res.redirect(`/percentiles?year=${req.params.year}`)
+})
+
+app.get('/percentiles', async (req, res, next) => {
+    console.debug('Received GET percentiles request with query ' + JSON.stringify(req.query));
     try {
-        const content = await retrievePercentiles(parseInt(req.params.year));
+        const query = req.query;
+        if (!query) {
+            return res.status(400).json({
+                error: 'No query sent'
+            })
+        }
+        if (!query.year && !query.pctile) {
+            return res.status(400).json({
+                error: 'Invalid GET query, must provide `year` AND/OR `query`.'
+            })
+        }
+
+        const parsedQuery: PercentileRequest = req.query;
+        const content = await retrievePercentiles(parsedQuery);
         return res.status(200).json({
             results: content
         });

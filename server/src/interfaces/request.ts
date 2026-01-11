@@ -8,4 +8,10 @@ export interface SummaryRequest {
     type?: SummaryType
 }
 
+export interface PercentileRequest {
+    year?: number
+    pctile?: number // has to be 0.01 to 0.99
+}
+
+
 export type Summary = PlayerSummary | TeamSummary; 
