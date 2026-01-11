@@ -23,7 +23,7 @@ summarize_passer_df <- function(x) {
         # ) %>%
         summarize(
             # player_id = dplyr::first(na.omit(passer_player_id)),
-            passer_player_name = dplyr::first(passer_player_name),
+            passer_player_name = dplyr::first(passer_player_name, na_rm = T),
             plays = n(),
             games = length(unique(game_id)),
             team_games = dplyr::last(team_games),
@@ -67,7 +67,7 @@ summarize_receiver_df <- function(x) {
         #     grepl('TEAM', receiver_player_name) == FALSE
         # ) %>%
         summarize(
-            receiver_player_name = dplyr::first(receiver_player_name),
+            receiver_player_name = dplyr::first(receiver_player_name, na_rm = T),
             # player_id = dplyr::first(na.omit(target_player_id)),
             plays = dplyr::n(),
             games = length(unique(game_id)),
@@ -105,7 +105,7 @@ summarize_rusher_df <- function(x) {
         # ) %>%
         summarize(
             # player_id = dplyr::first(na.omit(rush_player_id)),
-            rusher_player_name = dplyr::first(rusher_player_name),
+            rusher_player_name = dplyr::first(rusher_player_name, na_rm = T),
             plays = n(),
             games = length(unique(game_id)),
             team_games = dplyr::last(team_games),
