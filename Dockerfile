@@ -13,8 +13,7 @@ RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
 
 COPY ./team_agg.R .
 
-RUN --mount=type=secret,id=CFBD_API_KEY  echo "CFBD_API_KEY=$(cat /run/secrets/CFBD_API_KEY)" >> .Renviron
-RUN Rscript ./team_agg.R skipcache
+RUN --mount=type=secret,id=CFBD_API_KEY  echo "CFBD_API_KEY=$(cat /run/secrets/CFBD_API_KEY)" >> .Renviron && Rscript ./team_agg.R skipcache
 
 FROM node:lts AS nodebase
 WORKDIR /root/src

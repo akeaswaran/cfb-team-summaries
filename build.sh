@@ -1,15 +1,6 @@
 #!/bin/sh
 
-# docker pull rocker/tidyverse:4.3
-# docker pull rocker/tidyverse:4.4
-while IFS= read -r line; do
-  # echo $line
-  array=(${line//=/ })
-  opts+=("id=${array[0]},env=${array[0]}")
-done < ./.env
-
-echo "${opts}"
-DOCKER_BUILDKIT=1 docker build --secret "${opts[@]}" --platform=linux/amd64 -t cfb-team-summaries:latest .
+DOCKER_BUILDKIT=1 docker build --secret id=CFBD_API_KEY,src=./secrets/CFBD_API_KEY --platform=linux/amd64 -t cfb-team-summaries:latest .
 
 docker stop cfb-team-summaries
 docker rm cfb-team-summaries
