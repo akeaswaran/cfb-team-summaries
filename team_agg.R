@@ -339,9 +339,15 @@ prepare_for_write <- function(x, yr, schools) {
 prepare_percentiles <- function(x) {
     tmp <- x %>%
         summarize(
-            GEI = sum(abs(wpa), na.rm = T),
-            GEI = GEI * (179.01777401608126 / dplyr::n()),
+            GEI = dplyr::first(GEI, na_rm = T),
             EPAplay = mean(EPA, na.rm = TRUE),
+
+            pass_success = mean(epa_success * pass, na.rm = T),
+            rush_success = mean(epa_success * rush, na.rm = T),
+            early_down_success = mean(early_down_success, na.rm = T),
+            early_down_EPA = mean(early_down_EPA, na.rm = T),
+            late_down_success = mean(late_down_success, na.rm = T),
+
             success = mean(epa_success, na.rm = TRUE),
             yardsplay = mean(yards_gained, na.rm = TRUE),
             dropbacks = (sum(pass, na.rm = TRUE)),
@@ -358,29 +364,32 @@ prepare_percentiles <- function(x) {
                 dropbacks == 0 ~ 0,
                 TRUE ~ ((sum(yds_receiving, na.rm = TRUE) + sum(yds_sacked, na.rm = TRUE)) / dropbacks)
             ),
+            pass_explosive = mean(explosive * pass, na.rm = TRUE),
+            rush_explosive = mean(explosive * rush, na.rm = TRUE),
             explosive = mean(explosive, na.rm = TRUE),
+
             third_down_success = mean(third_down_success, na.rm = TRUE),
             red_zone_success = mean(red_zone_success, na.rm = TRUE),
             play_stuffed = mean(play_stuffed, na.rm = TRUE),
-            havoc = mean(havoc, na.rm = TRUE)
+
+
+            nonExplosiveEpaPerPlay = mean(nonExplosiveEpa, na.rm = T),
+            havoc = mean(havoc, na.rm = TRUE),
+
+            yardsrush = mean(yds_rushed, na.rm = T),
+            lineyards = mean(line_yards, na.rm = T),
+            opportunity_run = mean(opportunity_run, na.rm = T),
+            third_down_distance = mean(third_down_distance, na.rm = TRUE),
+
         ) %>% ungroup()
 
     summ_tmp <- tmp %>% summarize(
         pctile = seq(.01, .99, by = .01),
-        GEI = quantile(GEI, probs = pctile, na.rm = TRUE),
-        EPAplay = quantile(EPAplay, probs = pctile, na.rm = TRUE),
-        success = quantile(success, probs = pctile, na.rm = TRUE),
-        yardsplay = quantile(yardsplay, probs = pctile, na.rm = TRUE),
-        EPAdropback = quantile(EPAdropback, probs = pctile, na.rm = TRUE),
-        EPArush = quantile(EPArush, probs = pctile, na.rm = TRUE),
-        yardsdropback = quantile(yardsdropback, probs = pctile, na.rm = TRUE),
-
-        explosive = quantile(explosive, probs = pctile, na.rm = TRUE),
-        third_down_success = quantile(third_down_success, probs = pctile, na.rm = TRUE),
-        red_zone_success = quantile(red_zone_success, probs = pctile, na.rm = TRUE),
-
-        play_stuffed = quantile(play_stuffed, probs = pctile, na.rm = TRUE),
-        havoc = quantile(havoc, probs = pctile, na.rm = TRUE),
+        dplyr::across(
+            -c(pctile, game_id, pos_team),
+            ~ quantile(.x, probs = pctile, na.rm = T),
+            .names = "{.col}"
+        )
     )
     return(summ_tmp)
 }
@@ -602,6 +611,10 @@ for (yr in seasons) {
                 (as.numeric(down) <= 2) ~ EPA,
                 TRUE ~ NA_real_
             ),
+            early_down_success = case_when(
+                (as.numeric(down) <= 2) ~ epa_success,
+                TRUE ~ NA_real_
+            ),
             havoc = (sack_vec | int | fumble_vec | !is.na(pass_breakup_player_name) | (yards_gained < 0)),
             explosive = case_when(
                 (pass == 1) ~ (EPA >= 2.4),
@@ -660,6 +673,12 @@ for (yr in seasons) {
         filter(!is.na(EPA) & !is.na(success) & !is.na(epa_success))
 
     team_off_pctls <- team_off_plays %>%
+        dplyr::group_by(game_id) %>%
+        dplyr::mutate(
+            GEI = sum(abs(wpa), na.rm = T),
+            GEI = GEI * (179.01777401608126 / dplyr::n()),
+        ) %>%
+        dplyr::ungroup() %>%
         group_by(game_id, pos_team) %>%
         prepare_percentiles()
 

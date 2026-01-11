@@ -681,13 +681,26 @@ function parsePercentiles(year: number, content: any[]): Percentile[] {
             epaPerDropback: parseFloat(item.EPAdropback), // EPAdropback
             epaPerRush: parseFloat(item.EPArush), // EPArush
             yardsPerDropback: parseFloat(item.yardsdropback), // yardsdropback
-        
+            
             explosivePlayRate: parseFloat(item.explosive), //explosive
             thirdDownSuccessRate: parseFloat(item.third_down_success), // third_down_success
             redZoneSuccessRate: parseFloat(item.red_zone_success), // red_zone_success
         
             playStuffedRate: parseFloat(item.play_stuffed), // play_stuffed
             havocRate: parseFloat(item.havoc), //havoc
+
+            yardsPerRush: parseFloat(item.yardsrush),
+            passingSuccessRate: parseFloat(item.pass_success),
+            passingExplosivePlayRate: parseFloat(item.pass_explosive), //explosive
+            rushingSuccessRate: parseFloat(item.rush_success),
+            rushingExplosivePlayRate: parseFloat(item.rush_explosive), //explosive
+            lineYards: parseFloat(item.lineyards),
+            rushOpportunityRate: parseFloat(item.opportunity_run),
+            nonExplosiveEpaPerPlay: parseFloat(item.nonExplosiveEpaPerPlay),
+            earlyDownEpaPerPlay: parseFloat(item.early_down_EPA),
+            earlyDownSuccessRate: parseFloat(item.early_down_success),
+            lateDownSuccessRate: parseFloat(item.late_down_success),
+            thirdDownDistance: parseFloat(item.third_down_distance),
         };
         result.push(pctl);
     }
