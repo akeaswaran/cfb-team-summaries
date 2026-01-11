@@ -9,7 +9,7 @@ RUN install2.r --error \
     devtools \
     glmnet
 
-RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
+RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR", ref = "AE/2025-receiving-yardage-parse-case")'
 
 COPY ./team_agg.R .
 
