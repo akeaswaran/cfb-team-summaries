@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:4.3 AS rbase
+FROM rocker/tidyverse:4.5 AS rbase
 
 WORKDIR /src
 
