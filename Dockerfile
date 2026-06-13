@@ -4,17 +4,17 @@ WORKDIR /src
 
 # team_agg.R deps beyond the rocker/tidyverse base.
 # Base already provides: dplyr (>= 1.1, required for .by / reframe() / join_by()),
-# cli, glue, purrr, readr, stringr, tidyr, ggplot2, lubridate, devtools.
-# Extras: glmnet (ridge opponent adjustments), janitor (clean_names).
-# httr2 is updated from CRAN because the base image's version predates
-# httr2::url_modify(), which current cfbfastR requires to install.
+# cli, glue, purrr, readr, stringr, tidyr, ggplot2, lubridate.
+# Extras: glmnet (ridge opponent adjustments), janitor (clean_names),
+# httr2 (cfbfastR needs url_modify()), remotes (to install cfbfastR from GitHub --
+# devtools 2.5+ deprecated install_github and requires remotes anyway).
 RUN install2.r --error \
-    devtools \
     glmnet \
     httr2 \
-    janitor
+    janitor \
+    remotes
 
-RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
+RUN Rscript -e 'remotes::install_github("sportsdataverse/cfbfastR")'
 
 COPY ./team_agg.R .
 
