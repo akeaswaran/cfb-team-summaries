@@ -2,12 +2,14 @@ FROM rocker/tidyverse:4.3 AS rbase
 
 WORKDIR /src
 
-# Install R packages
+# team_agg.R deps beyond the rocker/tidyverse base.
+# Base already provides: dplyr (>= 1.1, required for .by / reframe() / join_by()),
+# cli, glue, purrr, readr, stringr, tidyr, ggplot2, lubridate, devtools.
+# Extras: glmnet (ridge opponent adjustments), janitor (clean_names).
 RUN install2.r --error \
-    stringr \
-    glue \
     devtools \
-    glmnet
+    glmnet \
+    janitor
 
 RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
 

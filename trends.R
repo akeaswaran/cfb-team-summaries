@@ -1,24 +1,43 @@
-library(tidyverse)
+library(cli)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(readr)
+library(showtext)
+library(sysfonts)
+library(tidyr)
+
+cli::cli_h1("CFB Binion Box Score percentile trends")
+
 sysfonts::font_add_google("Chivo")
 showtext::showtext_auto()
 seasons <- 2014:2025
 
-percentile_list = purrr::map(seasons, ~ read.csv(paste0("./data/", .x, "/percentiles.csv")) %>% dplyr::mutate(season = .x))
-percentiles = purrr::list_rbind(percentile_list)
+percentiles <- purrr::map(
+    seasons,
+    \(yr) {
+        readr::read_csv(
+            file.path("./data", yr, "percentiles.csv"),
+            show_col_types = FALSE
+        ) |>
+            dplyr::mutate(season = yr)
+    }
+) |>
+    purrr::list_rbind()
 
 
-percentiles %>%
-    dplyr::filter(pctile %in% c(0.25, 0.50, 0.75)) %>%
-    dplyr::select(-yardsdropback, -GEI) %>%
-    tidyr::pivot_longer(cols = colnames(.)[which(!grepl("season|pctile", colnames(.)))]) %>%
+percentiles |>
+    dplyr::filter(pctile %in% c(0.25, 0.50, 0.75)) |>
+    dplyr::select(-yardsdropback, -GEI) |>
+    tidyr::pivot_longer(cols = !c(season, pctile)) |>
     dplyr::mutate(
         value = dplyr::case_when(
             name %in% c("success", "explosive", "third_down_success", "red_zone_success", "havoc", "play_stuffed") ~ (100 * value),
             .default = value
         )
-    ) %>%
-    tidyr::pivot_wider(id_cols = c(season, name), names_from = c(pctile), values_from = c(value)) %>%
-    #View()
+    ) |>
+    tidyr::pivot_wider(id_cols = c(season, name), names_from = c(pctile), values_from = c(value)) |>
+    # View()
     dplyr::mutate(
         name = dplyr::case_when(
             name == "EPAdropback" ~ "EPA/dropback",
@@ -40,20 +59,15 @@ percentiles %>%
                 "Havoc %", "Stuff %"
             )
         )
-    ) %>%
+    ) |>
     ggplot2::ggplot() +
-
     ggplot2::geom_point(ggplot2::aes(x = season, y = `0.25`, color = "25th")) +
     ggplot2::geom_line(ggplot2::aes(x = season, y = `0.25`, color = "25th")) +
-
     ggplot2::geom_point(ggplot2::aes(x = season, y = `0.5`, color = "50th")) +
     ggplot2::geom_line(ggplot2::aes(x = season, y = `0.5`, color = "50th")) +
-
-
     ggplot2::geom_point(ggplot2::aes(x = season, y = `0.75`, color = "75th")) +
     ggplot2::geom_line(ggplot2::aes(x = season, y = `0.75`, color = "75th")) +
-
-    ggplot2::facet_wrap(~ name, scales = "free") +
+    ggplot2::facet_wrap(~name, scales = "free") +
     ggplot2::theme_minimal() +
     ggplot2::theme(
         axis.title.x = ggplot2::element_blank(),
@@ -64,15 +78,14 @@ percentiles %>%
         legend.text = ggplot2::element_text(family = "Chivo"),
         legend.position = "inside",
         legend.position.inside = c(0.55, 0.15),
-
         plot.title = ggplot2::element_text(family = "Chivo", size = 15, face = "bold"),
         plot.subtitle = ggplot2::element_text(family = "Chivo", size = 12),
-        plot.caption = ggplot2::element_text(family = "Chivo"),
+        plot.caption = ggplot2::element_text(family = "Chivo")
     ) +
     ggplot2::scale_color_manual(
-        name='Percentile',
-        breaks=c("25th", "50th", "75th"),
-        values=c("25th"='purple', "50th"='black', "75th"='forestgreen')
+        name = "Percentile",
+        breaks = c("25th", "50th", "75th"),
+        values = c("25th" = "purple", "50th" = "black", "75th" = "forestgreen")
     ) +
     ggplot2::labs(
         title = "The Binion Box Score: 2014-2025",
