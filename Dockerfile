@@ -6,9 +6,12 @@ WORKDIR /src
 # Base already provides: dplyr (>= 1.1, required for .by / reframe() / join_by()),
 # cli, glue, purrr, readr, stringr, tidyr, ggplot2, lubridate, devtools.
 # Extras: glmnet (ridge opponent adjustments), janitor (clean_names).
+# httr2 is updated from CRAN because the base image's version predates
+# httr2::url_modify(), which current cfbfastR requires to install.
 RUN install2.r --error \
     devtools \
     glmnet \
+    httr2 \
     janitor
 
 RUN Rscript -e 'devtools::install_github(repo = "sportsdataverse/cfbfastR")'
